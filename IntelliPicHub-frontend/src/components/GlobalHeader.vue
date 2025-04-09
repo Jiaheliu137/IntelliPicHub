@@ -68,9 +68,20 @@ const originMenus = [
     title: 'Home',
   },
   {
+    key: '/add_picture',
+    label: 'Add',
+    title: 'Add picture',
+  },
+
+  {
     key: '/admin/userManage',
     label: 'UserManage',
     title: 'admin user manage',
+  },
+  {
+    key: '/admin/pictureManage',
+    label: 'PictureManage',
+    title: 'admin picture manage',
   },
   {
     key: 'others',

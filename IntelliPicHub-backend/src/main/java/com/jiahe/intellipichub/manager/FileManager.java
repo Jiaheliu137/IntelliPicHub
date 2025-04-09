@@ -101,6 +101,9 @@ public class FileManager {
         ThrowUtils.throwIf(fileSzie > MAX_FILE_SIZE, ErrorCode.PARAMS_ERROR, "File size can not be more than 2M");
         // 2. 校验文件后缀
         String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
+        if (fileSuffix != null) {
+            fileSuffix = fileSuffix.toLowerCase(); // 转为小写，不区分大小写
+        }
         // 运行上传的文件后缀列表
         final List<String> ALLOW_FORMAT_LIST = Arrays.asList("jpg", "png", "jpeg", "webp");
         ThrowUtils.throwIf(!ALLOW_FORMAT_LIST.contains(fileSuffix), ErrorCode.PARAMS_ERROR, "File format is not allowed");
