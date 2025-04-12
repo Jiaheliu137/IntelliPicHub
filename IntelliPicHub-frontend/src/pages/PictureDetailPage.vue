@@ -1,6 +1,6 @@
 <template>
   <div id="pictureDetailPage">
-<!--    列的横向和竖向间距都是16-->
+    <!--    列的横向和竖向间距都是16-->
     <a-row :gutter="[16, 16]">
       <!-- 图片展示区 -->
       <a-col :sm="24" :md="16" :xl="18">
@@ -55,12 +55,23 @@
           <a-space wrap>
             <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
               Edit
-
-
             </a-button>
             <a-button :icon="h(DeleteOutlined)" v-if="canEdit" danger @click="doDelete">
               Delete
+            </a-button>
+            <a-button
 
+              type="primary"
+              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
+            >
+              Pass
+            </a-button>
+            <a-button
+
+              danger
+              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
+            >
+              Reject
             </a-button>
             <a-button type="primary" @click="doDownload">
               Free download
@@ -68,37 +79,32 @@
                 <DownloadOutlined />
               </template>
             </a-button>
-
-
           </a-space>
-
-
         </a-card>
       </a-col>
     </a-row>
-
   </div>
 </template>
 
-
 <script setup lang="ts">
-
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
-
 import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref, h } from 'vue'
 import {
   deletePictureUsingPost,
   getPictureVoByIdUsingGet,
   listPictureTagCategoryUsingGet,
-  listPictureVoByPageUsingPost
+  listPictureVoByPageUsingPost,
+  doPictureReviewUsingPost
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { downloadImage, formatSize } from '../utils'
 import router from '@/router'
+import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture.ts'
 
 const loginUserStore = useLoginUserStore()
+
 // 是否具有编辑权限
 const canEdit = computed(() => {
   const loginUser = loginUserStore.loginUser
@@ -111,16 +117,42 @@ const canEdit = computed(() => {
   return loginUser.id === user.id || loginUser.userRole === 'admin'
 })
 
+// 是否是管理员
+const isAdmin = computed(() => {
+  return loginUserStore.loginUser.userRole === 'admin'
+})
+
+// 处理审核
+const handleReview = async (pic: API.Picture, reviewStatus: number) => {
+  const reviewMessage = reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS
+    ? 'Admin operation: Passed'
+    : 'Admin operation: Rejected'
+
+  const res = await doPictureReviewUsingPost({
+    id: pic.id,
+    reviewStatus,
+    reviewMessage
+  })
+
+  if (res.data.code === 0) {
+    message.success('Review operation successful')
+    // 刷新图片信息
+    // fetchPictureDetail()
+  } else {
+    message.error('Review operation failed, ' + res.data.message)
+  }
+}
+
 // 处理下载
 const doDownload = () => {
   downloadImage(picture.value.url)
 }
 
-
 // 编辑
 const doEdit = () => {
   router.push('/add_picture?id=' + picture.value.id)
 }
+
 // 删除
 const doDelete = async () => {
   const id = picture.value.id
@@ -129,17 +161,11 @@ const doDelete = async () => {
   }
   const res = await deletePictureUsingPost({ id })
   if (res.data.code === 0) {
-    message.success('删除成功')
+    message.success('Deleted successfully')
   } else {
-    message.error('删除失败')
+    message.error('Delete failed')
   }
 }
-
-
-
-
-
-
 
 interface Props {
   id: string | number
@@ -158,25 +184,20 @@ const fetchPictureDetail = async () => {
     if (res.data.code === 0 && res.data.data) {
       picture.value = res.data.data
     } else {
-      message.error('Failed to get picture information，' + res.data.message)
+      message.error('Failed to get picture information, ' + res.data.message)
     }
   } catch (e: any) {
-    message.error('Failed to get picture information：' + e.message)
+    message.error('Failed to get picture information: ' + e.message)
   }
 }
 
 onMounted(() => {
   fetchPictureDetail()
 })
-
-
 </script>
-
 
 <style scoped>
 #pictureDetailPage {
   margin-bottom: 16px;
 }
-
-
 </style>

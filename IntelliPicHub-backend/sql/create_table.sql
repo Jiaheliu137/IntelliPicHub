@@ -56,3 +56,14 @@ create table if not exists picture
     INDEX idx_tags (tags),                 -- Improve query performance based on tags
     INDEX idx_userId (userId)              -- Improve query performance based on user ID
 ) comment 'Image' collate = utf8mb4_unicode_ci;
+
+ALTER TABLE picture
+    -- 添加新列
+    ADD COLUMN reviewStatus INT DEFAULT 0 NOT NULL COMMENT 'Review Status: 0-Pending; 1-Approved; 2-Rejected',
+    ADD COLUMN reviewMessage VARCHAR(512) NULL COMMENT 'Review Message',
+    ADD COLUMN reviewerId BIGINT NULL COMMENT 'Reviewer ID',
+    ADD COLUMN reviewTime DATETIME NULL COMMENT 'Review Time';
+
+-- Create an index based on the reviewStatus column
+CREATE INDEX idx_reviewStatus ON picture (reviewStatus);
+

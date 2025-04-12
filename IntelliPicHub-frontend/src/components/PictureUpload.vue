@@ -78,11 +78,11 @@ const beforeUpload = (file: UploadProps['fileList'][number]) => {
     message.error('Don not support this format，recommend jpg，jpeg，png')
   }
   // 校验图片大小
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
     message.error('Image must smaller than 2MB!')
   }
-  return isJpgOrPng && isLt2M
+  return isJpgOrPng && isLt5M
 }
 </script>
 <style scoped>

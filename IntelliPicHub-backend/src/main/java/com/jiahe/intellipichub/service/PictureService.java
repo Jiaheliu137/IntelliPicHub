@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jiahe.intellipichub.model.dto.picture.PictureQueryRequest;
+import com.jiahe.intellipichub.model.dto.picture.PictureReviewRequest;
 import com.jiahe.intellipichub.model.dto.picture.PictureUploadRequest;
 import com.jiahe.intellipichub.model.entity.Picture;
 import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.vo.PictureVO;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,12 +22,12 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片
      *
-     * @param multipartFile
+     * @param inputSource 文件输入源
      * @param pictureUploadRequest
      * @param loginUser
      * @return
      */
-    PictureVO uploadPicture(MultipartFile multipartFile,
+    PictureVO uploadPicture(Object inputSource,
                             PictureUploadRequest pictureUploadRequest,
                             User loginUser);
 
@@ -52,6 +52,21 @@ public interface PictureService extends IService<Picture> {
 
     public void validPicture(Picture picture);
 
+   
+    /**
+     * 
+     * @param pictureReviewRequest
+     * @param loginUser
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
+
+    /**
+     * 填充审核参数
+     * @param picture
+     * @param loginUser
+     */
+    void fillReviewParams(Picture picture,User loginUser);
 }
 
 

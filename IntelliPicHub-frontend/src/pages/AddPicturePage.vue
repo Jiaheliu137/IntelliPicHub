@@ -3,10 +3,18 @@
     <h2 style="margin-bottom: 16px">
       {{ route.query?.id ? 'Edit picture' : 'Add picture' }}
     </h2>
-    <!--    图片上传组件-->
-    <PictureUpload :picture="picture" :onSuccess="onSuccess" />
-    <!--    图片信息表单-->
+    <!-- 选择上传方式 -->
+    <a-tabs v-model:activeKey="uploadType">
+      <a-tab-pane key="file" tab="File uplad">
+        <PictureUpload :picture="picture" :onSuccess="onSuccess" />
+      </a-tab-pane>
+      <a-tab-pane key="url" tab="Url upload" force-render>
+        <UrlPictureUpload :picture="picture" :onSuccess="onSuccess" />
+      </a-tab-pane>
+    </a-tabs>
 
+
+<!--    图片信息表单-->
     <a-form v-if="picture" name="pictureForm" layout="vertical" :model="pictureForm" @finish="handleSubmit">
       <a-form-item name="name" label="Name">
         <a-input
@@ -59,10 +67,12 @@ import {
   listPictureTagCategoryUsingGet
 } from '@/api/pictureController.ts'
 import { useRoute, useRouter } from 'vue-router'
+import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 
 // 定义 picture 属性，存储上传的图片信息
 const picture = ref<API.PictureVO>()
 const pictureForm = reactive<API.PictureEditRequest>({})
+const uploadType = ref<'file' | 'url'>('file')
 
 
 // 定义 onSuccess 回调函数，在图片上传成功时被调用
@@ -79,7 +89,7 @@ const getOldPicture = async () => {
   const id = route.query?.id
   if (id) {
     const res = await getPictureVoByIdUsingGet({
-      id
+      id: id
     })
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data

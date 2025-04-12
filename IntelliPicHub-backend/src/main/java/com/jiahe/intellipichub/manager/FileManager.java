@@ -26,6 +26,7 @@ import java.util.List;
 // 上传图片通用方法
 @Slf4j
 @Service
+@Deprecated
 public class FileManager {
 
     @Resource

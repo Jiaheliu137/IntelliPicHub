@@ -21,7 +21,18 @@
           style="min-width: 180px"
           allow-clear
         >
+
+
         </a-select>
+      </a-form-item>
+      <a-form-item label="ReviewStatus" name="reviewStatus">
+        <a-select
+          v-model:value="searchParams.reviewStatus"
+          :options="PIC_REVIEW_STATUS_OPTIONS"
+          placeholder="Please select reviewStatus"
+          style="min-width: 180px"
+          allow-clear
+        />
       </a-form-item>
 
 
@@ -31,12 +42,13 @@
     </a-form>
     <div style="margin-bottom: 16px" />
     <!--    表格-->
+    <!--      如果不想让表格被挤压可以在s-table里加这一句   :scroll="{ x: 'max-content' }"-->
     <a-table
       :columns="columns"
       :data-source="dataList"
       :pagination="pagination"
       @change="doTableChange"
-      :scroll="{ x: 'max-content' }"
+
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'url'">
@@ -58,16 +70,17 @@
           <div>Ratio：{{ record.picScale }}</div>
           <div>Size：{{ (record.picSize / 1024).toFixed(2) }}KB</div>
         </template>
-
-
-        <template v-else-if="column.dataIndex === 'pictureRole'">
-          <div v-if="record.pictureRole === 'admin'">
-            <a-tag color="green">Admin</a-tag>
-          </div>
-          <div v-else>
-            <a-tag color="blue">Picture</a-tag>
+        <!-- 审核信息 -->
+        <template v-if="column.dataIndex === 'reviewMessage'">
+          <div>ReviewStatus：{{ PIC_REVIEW_STATUS_MAP[record.reviewStatus] }}</div>
+          <div>ReviewMessage：{{ record.reviewMessage }}</div>
+          <div>Reviewer：{{ record.reviewerId }}</div>
+          <div v-if="record.reviewTime">
+            ReviewTime：{{ dayjs(record.reviewTime).format('YYYY-MM-DD HH:mm:ss') }}
           </div>
         </template>
+
+
         <template v-if="column.dataIndex === 'createTime'">
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
@@ -75,7 +88,22 @@
           {{ dayjs(record.editTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-space>
+          <a-space wrap>
+            <a-button
+              v-if="record.reviewStatus !== PIC_REVIEW_STATUS_ENUM.PASS"
+              type="link"
+              @click="handleReview(record, PIC_REVIEW_STATUS_ENUM.PASS)"
+            >
+              Pass
+            </a-button>
+            <a-button
+              v-if="record.reviewStatus !== PIC_REVIEW_STATUS_ENUM.REJECT"
+              type="link"
+              danger
+              @click="handleReview(record, PIC_REVIEW_STATUS_ENUM.REJECT)"
+            >
+              Reject
+            </a-button>
             <a-button type="link" :href="`/add_picture?id=${record.id}`" target="_blank">Edit</a-button>
             <a-button danger @click="doDelete(record.id)">Delete</a-button>
           </a-space>
@@ -88,12 +116,13 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import {
-  deletePictureUsingPost,
+  deletePictureUsingPost, doPictureReviewUsingPost,
   listPictureByPageUsingPost,
   listPictureVoByPageUsingPost
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP, PIC_REVIEW_STATUS_OPTIONS } from '../../constants/picture.ts'
 
 const columns = [
   {
@@ -130,6 +159,10 @@ const columns = [
     title: 'UserId',
     dataIndex: 'userId',
     width: 80
+  },
+  {
+    title: 'ReviewMessage',
+    dataIndex: 'reviewMessage'
   },
   {
     title: 'CreateTime',
@@ -217,6 +250,25 @@ const doDelete = async (id: string) => {
     message.error('Delete failed,' + res.data.message)
   }
 }
+
+// 审核图片
+const handleReview = async (record: API.Picture, reviewStatus: number) => {
+  const reviewMessage = reviewStatus === PIC_REVIEW_STATUS_ENUM.PASS ? 'Administrator operation passed' : 'Administrator operation rejected'
+
+  const res = await doPictureReviewUsingPost({
+    id: record.id,
+    reviewStatus,
+    reviewMessage
+  })
+  if (res.data.code === 0) {
+    message.success('Review operation successed.')
+    // 重新获取列表
+    fetchData()
+  } else {
+    message.error('Review operation failed，' + res.data.message)
+  }
+}
+
 </script>
 
 

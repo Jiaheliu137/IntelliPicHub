@@ -1,12 +1,11 @@
-package com.jiahe.intellipichub.model.entity;
+package generator.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
-
 import java.util.Date;
+import lombok.Data;
 
 /**
  * Image
@@ -18,7 +17,7 @@ public class Picture {
     /**
      * ID
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
@@ -94,7 +93,6 @@ public class Picture {
     /**
      * Is Deleted
      */
-    @TableLogic
     private Integer isDelete;
 
     /**
