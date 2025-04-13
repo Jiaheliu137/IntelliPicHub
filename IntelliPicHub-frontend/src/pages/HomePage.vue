@@ -12,7 +12,7 @@
     </div>
 
     <!-- 分类 + 标签 -->
-    <a-tabs v-model:activeKey="selectedCategory" @change="doSearch">
+    <a-tabs v-model:activeKey="selectedCategory" @change="doSearch" >
       <a-tab-pane key="all" tab="All" />
       <a-tab-pane v-for="category in categoryList" :key="category" :tab="category" />
     </a-tabs>
@@ -50,7 +50,7 @@
               <h3 class="picture-title">{{ picture.name }}</h3>
               <div class="picture-tags">
                 <a-tag color="green">
-                  {{ picture.category ?? 'Default' }}
+                  {{ picture.category ?? 'Other' }}
                 </a-tag>
                 <a-tag v-for="tag in picture.tags" :key="tag">
                   {{ tag }}
@@ -82,7 +82,7 @@ const loading = ref(true)
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
   current: 1,
-  pageSize: 12,
+  pageSize: 24,
   sortField: 'createTime',
   sortOrder: 'descend'
 })

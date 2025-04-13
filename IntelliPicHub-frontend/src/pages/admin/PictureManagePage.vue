@@ -1,5 +1,14 @@
 <template>
   <div id="pictureManagePage">
+    <a-flex justify="space-between">
+      <h2>Picture Manage</h2>
+      <a-space>
+        <a-button type="primary" href="/add_picture" target="_blank">+ Create picture</a-button>
+        <a-button type="primary" href="/add_picture/batch" target="_blank" ghost>+ Create pictures in batches</a-button>
+      </a-space>
+    </a-flex>
+    <div style="margin-bottom: 16px"></div>
+
     <!--    搜索表单-->
     <a-form layout="inline" :model="searchParams" @finish="doSearch">
       <a-form-item label="Keywords">

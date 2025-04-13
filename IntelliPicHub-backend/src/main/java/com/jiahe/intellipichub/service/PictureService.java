@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.jiahe.intellipichub.model.dto.picture.PictureQueryRequest;
 import com.jiahe.intellipichub.model.dto.picture.PictureReviewRequest;
+import com.jiahe.intellipichub.model.dto.picture.PictureUploadByBatchRequest;
 import com.jiahe.intellipichub.model.dto.picture.PictureUploadRequest;
 import com.jiahe.intellipichub.model.entity.Picture;
 import com.jiahe.intellipichub.model.entity.User;
@@ -67,6 +68,15 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      */
     void fillReviewParams(Picture picture,User loginUser);
+
+    /**
+     * 批量抓取和创建图片
+     *
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return 返回成功创建的图片数
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 }
 
 

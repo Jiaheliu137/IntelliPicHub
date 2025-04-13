@@ -176,7 +176,7 @@ public class PictureController {
         long current = pictureQueryRequest.getCurrent();
         long size = pictureQueryRequest.getPageSize();
         // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(size > 50, ErrorCode.PARAMS_ERROR);
 
         // 普通用户默认只能查看过审的图片
         pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
@@ -227,8 +227,8 @@ public class PictureController {
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
-        List<String> tagList = Arrays.asList("Popular", "Funny", "Life", "HD", "Art", "Campus", "Background", "Anime", "Creative");
-        List<String> categoryList = Arrays.asList("Wallpaper", "Design", "Emoji", "Material", "Poster");
+        List<String> tagList = Arrays.asList("Popular", "Funny", "Life", "HD", "Art", "Campus", "Background", "Anime", "Creative", "Other");
+        List<String> categoryList = Arrays.asList("Wallpaper", "Design", "Emoji", "Material", "Poster", "Other");
         pictureTagCategory.setTagList(tagList);
         pictureTagCategory.setCategoryList(categoryList);
         return ResultUtils.success(pictureTagCategory);
@@ -245,5 +245,16 @@ public class PictureController {
         pictureService.doPictureReview(pictureReviewRequest,loginUser);
         return ResultUtils.success(true);
     }
+
+    @PostMapping("/upload/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Integer> uploadPictureByBatch(@RequestBody PictureUploadByBatchRequest pictureUploadByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureUploadByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser);
+        return ResultUtils.success(uploadCount);
+    }
+
+
 
 }

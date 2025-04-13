@@ -71,7 +71,10 @@ import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 
 // 定义 picture 属性，存储上传的图片信息
 const picture = ref<API.PictureVO>()
-const pictureForm = reactive<API.PictureEditRequest>({})
+const pictureForm = reactive<API.PictureEditRequest>({
+  category: 'Other', // 设置默认分类为"Other"
+  tags: ['Other']    // 设置默认标签为"Other"
+})
 const uploadType = ref<'file' | 'url'>('file')
 
 
@@ -117,6 +120,16 @@ const handleSubmit = async (values: API.PictureEditRequest) => {
     message.error('Please upload a picture first')
     return
   }
+
+  // 确保有默认值
+  if (!values.category || values.category.trim() === '') {
+    values.category = 'Other'
+  }
+
+  if (!values.tags || values.tags.length === 0) {
+    values.tags = ['Other']
+  }
+
   const res = await editPictureUsingPost({
     id: pictureId,
     ...values
