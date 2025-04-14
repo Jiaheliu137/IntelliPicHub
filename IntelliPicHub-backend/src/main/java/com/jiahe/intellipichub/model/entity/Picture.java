@@ -27,6 +27,16 @@ public class Picture {
     private String url;
 
     /**
+     * Thumbnail Image URL
+     */
+    private String thumbnailUrl;
+
+    /**
+     * Original Image URL
+     */
+    private String originalUrl;
+
+    /**
      * Image Name
      */
     private String name;

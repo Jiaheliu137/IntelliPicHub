@@ -1,8 +1,10 @@
 package com.jiahe.intellipichub.manager;
 
 
+import cn.hutool.core.io.FileUtil;
 import com.jiahe.intellipichub.config.CosClientConfig;
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.GetObjectRequest;
 import com.qcloud.cos.model.PutObjectRequest;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 
 // 通用方法
@@ -61,10 +65,46 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 1 表示返回原图信息
         picOperations.setIsPicInfo(1);
+
+        // 图片处理操作列表
+        List<PicOperations.Rule> rules = new ArrayList<>();
+
+        // 1. 图片压缩（转为webp格式）（原图压缩为webp）
+        String webpKey = FileUtil.mainName(key)+".webp";
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        compressRule.setFileId(webpKey);
+        compressRule.setBucket(cosClientConfig.getBucket());
+        compressRule.setRule("imageMogr2/format/webp");
+        rules.add(compressRule);
+        
+        // 2. 缩略图处理（原图处理为缩略图），仅对20kB以上的图片生成缩略图
+        if (file.length() > 20 * 1024) {
+            PicOperations.Rule thumbnailRule = new PicOperations.Rule();
+            // 拼接缩略图路径
+            String thumbnailKey = FileUtil.mainName(key)+"_thumbnail."+FileUtil.getSuffix(key);
+            thumbnailRule.setFileId(thumbnailKey);
+            thumbnailRule.setBucket(cosClientConfig.getBucket());
+            // 缩放规则，/thumbnail/<Width>x<Height>>，（如果处理后的图片大于原图宽高则不处理）
+            thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>",256,256));
+            rules.add(thumbnailRule);
+        }
+
+
         // 构造处理参数
+        picOperations.setRules(rules);
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
     }
+
+    /**
+     * 删除对象
+     *
+     * @param key 文件 key
+     */
+    public void deleteObject(String key) throws CosClientException {
+        cosClient.deleteObject(cosClientConfig.getBucket(), key);
+    }
+
 
 }
 

@@ -145,6 +145,7 @@ declare namespace API {
     introduction?: string
     isDelete?: number
     name?: string
+    originalUrl?: string
     picFormat?: string
     picHeight?: number
     picScale?: number
@@ -155,6 +156,7 @@ declare namespace API {
     reviewTime?: string
     reviewerId?: number
     tags?: string
+    thumbnailUrl?: string
     updateTime?: string
     url?: string
     userId?: number
@@ -232,12 +234,14 @@ declare namespace API {
     id?: number
     introduction?: string
     name?: string
+    originalUrl?: string
     picFormat?: string
     picHeight?: number
     picScale?: number
     picSize?: number
     picWidth?: number
     tags?: string[]
+    thumbnailUrl?: string
     updateTime?: string
     url?: string
     user?: UserVO

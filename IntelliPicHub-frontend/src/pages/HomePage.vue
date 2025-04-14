@@ -12,7 +12,7 @@
     </div>
 
     <!-- 分类 + 标签 -->
-    <a-tabs v-model:activeKey="selectedCategory" @change="doSearch" >
+    <a-tabs v-model:activeKey="selectedCategory" @change="doSearch">
       <a-tab-pane key="all" tab="All" />
       <a-tab-pane v-for="category in categoryList" :key="category" :tab="category" />
     </a-tabs>
@@ -44,7 +44,7 @@
             <img
               class="picture-image"
               :alt="picture.name"
-              :src="picture.url"
+              :src="picture.thumbnailUrl??picture.url"
             />
             <div class="picture-overlay">
               <h3 class="picture-title">{{ picture.name }}</h3>
@@ -140,12 +140,12 @@ const doSearch = () => {
   fetchData()
 }
 
-const router=useRouter();
+const router = useRouter()
 
 // 跳转至图片详情页
-const doClickPicture=(picture:API.PictureVO)=>{
+const doClickPicture = (picture: API.PictureVO) => {
   router.push({
-    path:`/picture/${picture.id}`,
+    path: `/picture/${picture.id}`
   })
 }
 

@@ -3,6 +3,7 @@ package com.jiahe.intellipichub.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.exception.ThrowUtils;
+import com.jiahe.intellipichub.manager.CosManager;
 import com.jiahe.intellipichub.manager.FileManager;
 import com.jiahe.intellipichub.manager.upload.FilePictureUpload;
 import com.jiahe.intellipichub.manager.upload.PictureUploadTemplate;
@@ -33,15 +35,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +66,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private UrlPictureUpload urlPictureUpload;
+    @Autowired
+    private CosManager cosManager;
 
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
@@ -101,7 +104,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
         // 构造要入库的图片信息
         Picture picture = new Picture();
-        picture.setUrl(uploadPictureResult.getUrl());
+        picture.setUrl(uploadPictureResult.getUrl()); // 保存压缩后的webp图像的url
+        picture.setOriginalUrl(uploadPictureResult.getOriginalUrl()); // 保存原始图像URL
+        picture.setThumbnailUrl(uploadPictureResult.getThumbnailUrl()); // 保存缩略图URL
         // 支持外层传递图片名称
         String picName = uploadPictureResult.getPicName();
         if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getPicName())) {
@@ -115,6 +120,13 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         picture.setPicFormat(uploadPictureResult.getPicFormat());
         picture.setUserId(loginUser.getId());
 
+        // 设置默认分类和标签为"Other"
+        picture.setCategory("Other");
+
+        // 设置默认标签为["Other"]
+        List<String> defaultTags = new ArrayList<>();
+        defaultTags.add("Other");
+        picture.setTags(JSONUtil.toJsonStr(defaultTags));
 
         // 插入数据库之前补充审核参数
         this.fillReviewParams(picture, loginUser);
@@ -128,6 +140,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         }
 
         boolean result = this.saveOrUpdate(picture);// 根据是否有id来决定是更新还是插入
+
+        // todo 如果是更新，则清理图片资源
+
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "Fail to update picture,failed to operate database");
 
         // 返回图片信息
@@ -329,7 +344,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 捕获可能的类型转换异常
             count = 20;
         }
-        
+
         try {
             if (first == null || first < 1) {
                 first = 1;
@@ -338,39 +353,56 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             // 捕获可能的类型转换异常
             first = 1;
         }
-        
+
         ThrowUtils.throwIf(count > 35, ErrorCode.PARAMS_ERROR, "Can not upload more than 35 pictures");
         // 名称前缀默认为搜索关键词
         String namePrefix = pictureUploadByBatchRequest.getNamePrefix();
         if (StrUtil.isBlank(namePrefix)) {
             namePrefix = searchText;
         }
-        
+
         // 获取分类和标签
         String category = pictureUploadByBatchRequest.getCategory();
         List<String> tags = pictureUploadByBatchRequest.getTags();
-        
+
         // 要抓取的地址
         String fetchUrl = String.format("https://www.bing.com/images/async?q=%s&first=%d&count=%d&mmasync=1", searchText, first, count);
         Document document;
         try {
             document = Jsoup.connect(fetchUrl).get();
         } catch (IOException e) {
-            log.error("获取页面失败", e);
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取页面失败");
+            log.error("Fail to get page", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "Fail to get page");
         }
         Element div = document.getElementsByClass("dgControl").first();
         if (ObjUtil.isNull(div)) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "获取元素失败");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "Fail to get element");
         }
-        Elements imgElementList = div.select("img.mimg");
+
+        //图片元素
+        Elements imgElementList = div.select(".iusc");
         int uploadCount = 0;
+
         for (Element imgElement : imgElementList) {
-            String fileUrl = imgElement.attr("src");
-            if (StrUtil.isBlank(fileUrl)) {
-                log.info("当前链接为空，已跳过: {}", fileUrl);
+
+            // 获取data-m属性中的JSON字符串
+            String dataM = imgElement.attr("m");
+            String fileUrl;
+            try {
+                // 解析JSON字符串
+                JSONObject jsonObject = JSONUtil.parseObj(dataM);
+                // 获取murl字段（原始图片URL）
+                fileUrl = jsonObject.getStr("murl");
+            } catch (Exception e) {
+                log.error("Fail to parse picture url", e);
                 continue;
             }
+
+            if (StrUtil.isBlank(fileUrl)) {
+                log.info("Current url is empty,skipped: {}", fileUrl);
+                continue;
+            }
+
             // 处理图片上传地址，防止出现转义问题
             int questionMarkIndex = fileUrl.indexOf("?");
             if (questionMarkIndex > -1) {
@@ -387,23 +419,23 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             }
             try {
                 PictureVO pictureVO = this.uploadPicture(fileUrl, pictureUploadRequest, loginUser);
-                
+
                 // 上传成功后，设置标签和分类
                 if (pictureVO != null && pictureVO.getId() != null) {
                     Picture picture = new Picture();
                     picture.setId(pictureVO.getId());
-                    
+
                     // 设置分类
                     if (StrUtil.isNotBlank(category)) {
                         picture.setCategory(category);
                     }
-                    
+
                     // 设置标签
                     if (CollUtil.isNotEmpty(tags)) {
                         // 标签在数据库中是以JSON字符串形式存储的
                         picture.setTags(JSONUtil.toJsonStr(tags));
                     }
-                    
+
                     // 只更新非空字段
                     boolean updateResult = this.updateById(picture);
                     if (updateResult) {
@@ -412,7 +444,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                         log.error("Failed to update picture tags and category, id = {}", pictureVO.getId());
                     }
                 }
-                
+
                 log.info("Picture upload success, id = {}", pictureVO.getId());
                 uploadCount++;
             } catch (Exception e) {
@@ -426,6 +458,32 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         return uploadCount;
     }
 
+    @Async
+    @Override
+    public void clearPictureFile(Picture oldPicture) {
+        // 判断该图片是否被多条记录使用
+        String pictureUrl = oldPicture.getUrl();
+        long count = this.lambdaQuery()
+                .eq(Picture::getUrl, pictureUrl)
+                .count();
+        // 不止一条记录用到了该图片，则不清理
+        if (count > 1) {
+            return;
+        }
+        // 删除压缩后的webp图片
+        cosManager.deleteObject(pictureUrl);
+        // 删除缩略图
+        String thumbnailUrl = oldPicture.getThumbnailUrl();
+        if (StrUtil.isNotBlank(thumbnailUrl)) {
+            cosManager.deleteObject(thumbnailUrl);
+        }
+        // 删除原图
+        String originalUrl = oldPicture.getOriginalUrl();
+        if (StrUtil.isNotBlank(originalUrl)) {
+            cosManager.deleteObject(originalUrl);
+        }
+
+    }
 
 
 }
