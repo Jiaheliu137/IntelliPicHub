@@ -75,3 +75,31 @@ ALTER TABLE picture ADD COLUMN originalUrl VARCHAR(512) NULL COMMENT 'Original I
 -- 添加缩略图URL字段
 ALTER TABLE picture ADD COLUMN thumbnailUrl VARCHAR(512) NULL COMMENT 'thumbnail Image URL' AFTER originalUrl;
 
+-- 空间表
+ create table if not exists space
+(
+    id         bigint auto_increment comment 'ID' primary key,
+    spaceName  varchar(128)                       null comment 'Space Name',
+    spaceLevel int      default 0                 null comment 'Space Level: 0-Common; 1-Professional; 2-Flagship',
+    maxSize    bigint   default 0                 null comment 'Maximum total size of images in the space',
+    maxCount   bigint   default 0                 null comment 'Maximum number of images in the space',
+    totalSize  bigint   default 0                 null comment 'Total size of images in the space',
+    totalCount bigint   default 0                 null comment 'Total number of images in the space',
+    userId     bigint                             not null comment 'Creator User ID',
+    createTime datetime default CURRENT_TIMESTAMP not null comment 'Creation Time',
+    editTime   datetime default CURRENT_TIMESTAMP not null comment 'Edit Time',
+    updateTime datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment 'Update Time',
+    isDelete   tinyint  default 0                 not null comment 'Is Deleted',
+    -- Index design
+    index idx_userId (userId),        -- Improve query performance based on user
+    index idx_spaceName (spaceName),  -- Improve query performance based on space name
+    index idx_spaceLevel (spaceLevel) -- Improve query performance based on space level
+) comment 'Space' collate = utf8mb4_unicode_ci;
+
+-- Add new column
+ALTER TABLE picture
+    ADD COLUMN spaceId  bigint  null comment 'Space ID (null indicates public space)';
+
+-- Create index
+CREATE INDEX idx_spaceId ON picture (spaceId);
+

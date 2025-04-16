@@ -169,6 +169,11 @@ const columns = [
     dataIndex: 'userId',
     width: 80
   },
+  // {
+  //   title: 'SpaceId',
+  //   dataIndex: 'spaceId',
+  //   width: 80
+  // },
   {
     title: 'ReviewMessage',
     dataIndex: 'reviewMessage'
@@ -218,11 +223,12 @@ const doTableChange = (page: any) => {
   fetchData()
 }
 
-// 获取数据
+// 获取数据,nullSpaceId:true是尽量不让管理员直接看到用户私人空间的图片，只查spaceid为null的图
 const fetchData = async () => {
   const res = await listPictureByPageUsingPost({
     // 将一个数组或对象展开成独立的元素或属性
-    ...searchParams
+    ...searchParams,
+    // nullSpaceId:true
   })
   if (res.data.code === 0 && res.data.data) {
     // 后端代码返回的是BaseResponse<Page<PictureVO>>类型，取值要套要套多层，要注意

@@ -3,13 +3,16 @@
     <h2 style="margin-bottom: 16px">
       {{ route.query?.id ? 'Edit picture' : 'Add picture' }}
     </h2>
+    <a-typography v-if="spaceId" type="secondary">
+      Save to space: <a :href="`/space/${spaceId}`" target="_blank">{{spaceId}}</a>
+    </a-typography>
     <!-- 选择上传方式 -->
     <a-tabs v-model:activeKey="uploadType">
       <a-tab-pane key="file" tab="File uplad">
-        <PictureUpload :picture="picture" :onSuccess="onSuccess" />
+        <PictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
       </a-tab-pane>
       <a-tab-pane key="url" tab="Url upload" force-render>
-        <UrlPictureUpload :picture="picture" :onSuccess="onSuccess" />
+        <UrlPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
       </a-tab-pane>
     </a-tabs>
 
@@ -50,7 +53,7 @@
       </a-form-item>
 
       <a-form-item>
-        <a-button type="primary" html-type="submit" style="width: 100%">Submit</a-button>
+        <a-button type="primary" html-type="submit" style="width: 100%">{{ route.query?.id ? 'Submit edit' : 'Add' }}</a-button>
       </a-form-item>
     </a-form>
   </div>
@@ -59,7 +62,7 @@
 
 <script setup lang="ts">
 import PictureUpload from '@/components/PictureUpload.vue'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   editPictureUsingPost,
@@ -84,7 +87,12 @@ const onSuccess = (newPicture: API.PictureVO) => {
   pictureForm.name = newPicture.name
 }
 
+const route = useRoute()
 const router = useRouter()
+
+const spaceId = computed(() => {
+  return route.query?.spaceId;
+})
 
 // 获取老数据
 const getOldPicture = async () => {
@@ -131,6 +139,7 @@ const handleSubmit = async (values: API.PictureEditRequest) => {
   }
 
   const res = await editPictureUsingPost({
+    spaceId:spaceId.value,
     id: pictureId,
     ...values
   })
@@ -175,7 +184,7 @@ onMounted(() => {
   getTagCategoryOptions()
 })
 
-const route = useRoute()
+
 
 
 </script>

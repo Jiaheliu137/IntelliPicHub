@@ -60,14 +60,14 @@
               Delete
             </a-button>
             <a-button
-
+              v-if="isAdmin"
               type="primary"
               @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
             >
               Pass
             </a-button>
             <a-button
-
+              v-if="isAdmin"
               danger
               @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
             >
@@ -150,7 +150,14 @@ const doDownload = () => {
 
 // 编辑
 const doEdit = () => {
-  router.push('/add_picture?id=' + picture.value.id)
+  // 跳转时携带spaceId
+  router.push({
+    path: `/add_picture`,
+    query: {
+      id: picture.value.id,
+      spaceId: picture.value.spaceId
+    }
+  })
 }
 
 // 删除
@@ -162,8 +169,10 @@ const doDelete = async () => {
   const res = await deletePictureUsingPost({ id })
   if (res.data.code === 0) {
     message.success('Deleted successfully')
+    // 删除成功后返回上一页
+    router.go(-1)
   } else {
-    message.error('Delete failed')
+    message.error('Delete failed: ' + (res.data.message || ''))
   }
 }
 

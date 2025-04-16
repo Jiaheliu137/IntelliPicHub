@@ -30,10 +30,17 @@
 
               <template #overlay>
                 <a-menu>
+                  <a-menu-item>
+                    <router-link to="/my_space">
+                      <UserOutlined />
+                      My Space
+                    </router-link>
+                  </a-menu-item>
                   <a-menu-item @click="doLogout">
                     <LogoutOutlined />
                     Logout
                   </a-menu-item>
+
                 </a-menu>
               </template>
             </a-dropdown>
@@ -48,7 +55,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, h, ref } from 'vue'
-import { HomeOutlined, LogoutOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
 import { MenuProps, message } from 'ant-design-vue'
 import { useRouter, RouteRecordRaw } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
@@ -65,29 +72,34 @@ const originMenus = [
     key: '/',
     icon: () => h(HomeOutlined),
     label: 'Home',
-    title: 'Home',
+    title: 'Home'
   },
   {
     key: '/add_picture',
     label: 'Add',
-    title: 'Add picture',
+    title: 'Add picture'
   },
 
   {
     key: '/admin/userManage',
     label: 'UserManage',
-    title: 'admin user manage',
+    title: 'admin user manage'
   },
   {
     key: '/admin/pictureManage',
     label: 'PictureManage',
-    title: 'admin picture manage',
+    title: 'admin picture manage'
+  },
+  {
+    key: '/admin/spaceManage',
+    label: 'SpaceManage',
+    title: 'admin space manage'
   },
   {
     key: 'others',
     label: h('a', { href: 'https://github.com/Jiaheliu137', target: '_blank' }, 'GitHub'),
-    title: 'github',
-  },
+    title: 'github'
+  }
 ]
 
 /**
@@ -132,15 +144,17 @@ const menus = computed(() => {
 })
 
 const router = useRouter() //get the current router instance
+// 当前要高亮的菜单项
 const current = ref<string[]>()
+// 监听路由变化，更新高亮菜单项
 router.afterEach((to, from, next) => {
   current.value = [to.path]
 })
 
-// Routing Transition Event
+// 路由跳转事件 Routing Transition Event
 const doMenuClick = ({ key }) => {
   router.push({
-    path: key,
+    path: key
   })
 }
 
@@ -149,7 +163,7 @@ const doLogout = async () => {
   const res = await userLogoutUsingPost()
   if (res.data.code === 0) {
     loginUserStore.setLoginUser({
-      userName: 'unLogin',
+      userName: 'unLogin'
     })
     message.success('Logout successfully')
     await router.push('/user/login')

@@ -32,16 +32,35 @@
 
 
     <!-- 图片列表 -->
-    <PictureList :dataList="dataList" :loading="loading" />
-    <a-pagination
-      style="text-align: right"
-      v-model:current="searchParams.current"
-      v-model:pageSize="searchParams.pageSize"
-      :total="total"
-      :show-size-changer="true"
-      :pageSizeOptions="['12', '24', '36', '48']"
-      @change="onPageChange"
-    />
+    <a-list
+      :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }"
+      :data-source="dataList"
+      :pagination="pagination"
+      :loading="loading"
+    >
+      <template #renderItem="{ item: picture }">
+        <a-list-item style="padding: 0">
+          <div class="picture-card" @click="doClickPicture(picture)">
+            <img
+              class="picture-image"
+              :alt="picture.name"
+              :src="picture.thumbnailUrl??picture.url"
+            />
+            <div class="picture-overlay">
+              <h3 class="picture-title">{{ picture.name }}</h3>
+              <div class="picture-tags">
+                <a-tag color="green">
+                  {{ picture.category ?? 'Other' }}
+                </a-tag>
+                <a-tag v-for="tag in picture.tags" :key="tag">
+                  {{ tag }}
+                </a-tag>
+              </div>
+            </div>
+          </div>
+        </a-list-item>
+      </template>
+    </a-list>
 
   </div>
 </template>
@@ -49,10 +68,10 @@
 
 <script setup lang="ts">
 
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { listPictureTagCategoryUsingGet, listPictureVoByPageUsingPost } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
-import PictureList from '@/components/PictureList.vue'
+import { useRouter } from 'vue-router'
 
 
 // 数据
@@ -69,11 +88,19 @@ const searchParams = reactive<API.PictureQueryRequest>({
 })
 
 // 分页参数
-const onPageChange = (page: number, pageSize: number) => {
-  searchParams.current = page
-  searchParams.pageSize = pageSize
-  fetchData()
-}
+const pagination = computed(() => {
+  return {
+    current: searchParams.current ?? 1,
+    pageSize: searchParams.pageSize ?? 10,
+    total: total.value,
+    // 切换页号时，会修改搜索参数并获取数据
+    onChange: (page: number, pageSize: number) => {
+      searchParams.current = page
+      searchParams.pageSize = pageSize
+      fetchData()
+    }
+  }
+})
 
 // 获取数据
 const fetchData = async () => {
@@ -113,8 +140,14 @@ const doSearch = () => {
   fetchData()
 }
 
+const router = useRouter()
 
-
+// 跳转至图片详情页
+const doClickPicture = (picture: API.PictureVO) => {
+  router.push({
+    path: `/picture/${picture.id}`
+  })
+}
 
 // 分类，标签
 const categoryList = ref<string[]>([])
@@ -129,8 +162,6 @@ const getTagCategoryOptions = async () => {
     // 转换成下拉选项组件接受的格式
     categoryList.value = res.data.data.categoryList ?? []
     tagList.value = res.data.data.tagList ?? []
-    // 初始化标签选择状态
-    selectedTagList.value = new Array(tagList.value.length).fill(false)
   } else {
     message.error('Fail to load category and tags，' + res.data.message)
   }
@@ -145,10 +176,6 @@ onMounted(() => {
 
 
 <style scoped>
-#homePage {
-  margin-bottom: 16px;
-}
-
 #homePage .search-bar {
   max-width: 480px;
   margin: 0 auto 16px;
@@ -158,4 +185,68 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+.picture-card {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.picture-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.picture-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.picture-card:hover .picture-image {
+  transform: scale(1.05);
+}
+
+.picture-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.picture-card:hover .picture-overlay {
+  transform: translateY(0);
+}
+
+.picture-title {
+  margin: 0 0 8px 0;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.picture-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.picture-tags :deep(.ant-tag) {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: rgba(0, 0, 0, 0.85);
+  border: none;
+}
+
+.picture-tags :deep(.ant-tag-green) {
+  background-color: rgba(255, 255, 255, 0.85);
+  color: #52c41a;
+  border: 1px solid #52c41a;
+}
 </style>

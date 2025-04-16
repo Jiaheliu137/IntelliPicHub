@@ -25,6 +25,7 @@ import { uploadPictureByUrlUsingPost, uploadPictureUsingPost } from '@/api/pictu
 // 子组件定义的 props（属性）是供 父组件 向子组件传递数据的机制
 // 接收父组件传递的 props
 interface Props {
+  spaceId?: number
   picture?: API.PictureVO
   onSuccess?: (newPicture: API.PictureVO) => void
 }
@@ -40,6 +41,7 @@ const handleUpload = async () => {
   loading.value = true
   try {
     const params: API.PictureUploadRequest = { fileUrl: fileUrl.value }
+    params.spaceId = props.spaceId
     if (props.picture) {
       params.id = props.picture.id
     }

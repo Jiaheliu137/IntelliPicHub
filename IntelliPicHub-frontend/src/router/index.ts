@@ -8,6 +8,10 @@ import AddPicturePage from '@/pages/AddPicturePage.vue'
 import PictureManagePage from '@/pages/admin/PictureManagePage.vue'
 import PictureDetailPage from '@/pages/PictureDetailPage.vue'
 import AddPictureBatch from '@/pages/AddPictureBatch.vue'
+import SpaceManagePage from '@/pages/admin/SpaceManagePage.vue'
+import AddSpacePage from '@/pages/AddSpacePage.vue'
+import MySpacePage from '@/pages/MySpacePage.vue'
+import SpaceDetailPage from '@/pages/SpaceDetailPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -62,9 +66,42 @@ const router = createRouter({
       }
     },
     {
+      path: '/admin/spaceManage',
+      name: 'space manage',
+      component: SpaceManagePage,
+      meta: {
+        access: ACCESS_ENUM.ADMIN
+      }
+    },
+    {
       path: '/add_picture',
       name: 'Add picture',
       component: AddPicturePage,
+      meta: {
+        hideInMenu: false
+      }
+    },
+    {
+      path: '/add_space',
+      name: 'Add space',
+      component: AddSpacePage,
+      meta: {
+        hideInMenu: false
+      }
+    },
+    {
+      path: '/my_space',
+      name: 'My space',
+      component: MySpacePage,
+      meta: {
+        hideInMenu: false
+      }
+    },
+    {
+      path: '/space/:id',
+      name: 'Space Information',
+      component: SpaceDetailPage,
+      props: true,
       meta: {
         hideInMenu: false
       }

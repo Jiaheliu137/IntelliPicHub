@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * User Table 已登录用户视图(脱敏)
+ * User Table
  * @TableName user
  */
 @TableName(value ="user")
