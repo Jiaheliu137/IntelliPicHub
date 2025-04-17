@@ -230,8 +230,13 @@ declare namespace API {
   type PictureQueryRequest = {
     category?: string
     current?: number
+    endEditTime?: string
     id?: number
     introduction?: string
+    maxPicHeight?: number
+    maxPicWidth?: number
+    minPicHeight?: number
+    minPicWidth?: number
     name?: string
     nullSpaceId?: boolean
     pageSize?: number
@@ -248,6 +253,7 @@ declare namespace API {
     sortField?: string
     sortOrder?: string
     spaceId?: number
+    startEditTime?: string
     tags?: string[]
     userId?: number
   }
@@ -331,7 +337,6 @@ declare namespace API {
 
   type SpaceEditRequest = {
     id?: number
-    spaceLevel?: number
     spaceName?: string
   }
 

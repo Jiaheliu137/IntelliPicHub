@@ -6,6 +6,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.jiahe.intellipichub.config.CosClientConfig;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -79,7 +81,7 @@ public abstract class PictureUploadTemplate {
                 return buildResult(originFilename, compressedCiObject, originalUrl, thubmnailCiObject);
 
             }
-
+            // 如果压缩图不存在，则使用原始图片信息
             return buildResult(originFilename, file, uploadPath, imageInfo, originalUrl);
         } catch (Exception e) {
             log.error("Failed to upload image to object storage, filepath = ", e);
@@ -106,6 +108,38 @@ public abstract class PictureUploadTemplate {
      * 处理输入源并生成本地临时文件
      */
     protected abstract void processFile(Object inputSource, File file) throws Exception;
+    
+    /**
+     * 从原始文件名中提取图片格式
+     * 如果不是常见图片格式，则返回webp
+     * @param originFilename 原始文件名
+     * @param fallbackFormat 备用格式（如果无法从原始文件名中提取出有效格式）
+     * @return 图片格式
+     */
+    protected String extractFormatFromOriginalUrl(String originFilename, String fallbackFormat) {
+        if (StrUtil.isBlank(originFilename)) {
+            return fallbackFormat;
+        }
+        
+        // 从原始文件名获取后缀作为格式
+        String format = FileUtil.getSuffix(originFilename);
+        if (StrUtil.isBlank(format)) {
+            return fallbackFormat;
+        }
+        
+        // 转换为小写
+        format = format.toLowerCase();
+        
+        // 常见图片格式列表
+        List<String> commonFormats = Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "webp", "svg", "ico", "tiff");
+        
+        // 如果不是常见图片格式，则使用备用格式
+        if (!commonFormats.contains(format)) {
+            return fallbackFormat;
+        }
+        
+        return format;
+    }
 
 
     /**
@@ -125,7 +159,11 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        uploadPictureResult.setPicFormat(compressedCiObject.getFormat());
+        
+        // 使用从原始URL中提取的格式，如果无法提取则使用压缩后的webp格式
+        String picFormat = extractFormatFromOriginalUrl(originFilename, compressedCiObject.getFormat());
+        uploadPictureResult.setPicFormat(picFormat);
+        
         uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
         // 设置压缩为webp的原图url
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
@@ -156,7 +194,11 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        uploadPictureResult.setPicFormat(imageInfo.getFormat());
+        
+        // 使用从原始URL中提取的格式，如果无法提取则使用imageInfo中的格式
+        String picFormat = extractFormatFromOriginalUrl(originFilename, imageInfo.getFormat());
+        uploadPictureResult.setPicFormat(picFormat);
+        
         uploadPictureResult.setPicSize(FileUtil.size(file));
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath);
         uploadPictureResult.setOriginalUrl(originalUrl);

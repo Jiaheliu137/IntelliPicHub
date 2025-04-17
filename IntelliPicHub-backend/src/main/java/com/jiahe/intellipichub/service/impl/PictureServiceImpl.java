@@ -223,8 +223,25 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String category = pictureQueryRequest.getCategory();
         List<String> tags = pictureQueryRequest.getTags();
         Long picSize = pictureQueryRequest.getPicSize();
-        Integer picWidth = pictureQueryRequest.getPicWidth();
-        Integer picHeight = pictureQueryRequest.getPicHeight();
+        
+        // 宽度相关参数
+        Integer minPicWidth = pictureQueryRequest.getMinPicWidth();
+        Integer maxPicWidth = pictureQueryRequest.getMaxPicWidth();
+        // 如果没有范围值但有精确值，则将精确值同时设为最小值和最大值
+        if ((minPicWidth == null && maxPicWidth == null) && pictureQueryRequest.getPicWidth() != null) {
+            minPicWidth = pictureQueryRequest.getPicWidth();
+            maxPicWidth = pictureQueryRequest.getPicWidth();
+        }
+        
+        // 高度相关参数
+        Integer minPicHeight = pictureQueryRequest.getMinPicHeight();
+        Integer maxPicHeight = pictureQueryRequest.getMaxPicHeight();
+        // 如果没有范围值但有精确值，则将精确值同时设为最小值和最大值
+        if ((minPicHeight == null && maxPicHeight == null) && pictureQueryRequest.getPicHeight() != null) {
+            minPicHeight = pictureQueryRequest.getPicHeight();
+            maxPicHeight = pictureQueryRequest.getPicHeight();
+        }
+        
         Double picScale = pictureQueryRequest.getPicScale();
         String picFormat = pictureQueryRequest.getPicFormat();
         String searchText = pictureQueryRequest.getSearchText();
@@ -239,8 +256,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         Long spaceId = pictureQueryRequest.getSpaceId();
         boolean nullSpaceId = pictureQueryRequest.isNullSpaceId();
-        // 时间应该是范围查询
-//        Date reviewTime = pictureQueryRequest.getReviewTime();
+
+        Date startEditTime = pictureQueryRequest.getStartEditTime();
+        Date endEditTime = pictureQueryRequest.getEndEditTime();
 
 
         // 从多字段中搜索
@@ -257,8 +275,15 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         queryWrapper.like(StrUtil.isNotBlank(introduction), "introduction", introduction);
         queryWrapper.like(StrUtil.isNotBlank(picFormat), "picFormat", picFormat);
         queryWrapper.eq(StrUtil.isNotBlank(category), "category", category);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picWidth), "picWidth", picWidth);
-        queryWrapper.eq(ObjUtil.isNotEmpty(picHeight), "picHeight", picHeight);
+        
+        // 统一使用范围查询逻辑处理宽度
+        queryWrapper.ge(ObjUtil.isNotEmpty(minPicWidth), "picWidth", minPicWidth);
+        queryWrapper.le(ObjUtil.isNotEmpty(maxPicWidth), "picWidth", maxPicWidth);
+        
+        // 统一使用范围查询逻辑处理高度
+        queryWrapper.ge(ObjUtil.isNotEmpty(minPicHeight), "picHeight", minPicHeight);
+        queryWrapper.le(ObjUtil.isNotEmpty(maxPicHeight), "picHeight", maxPicHeight);
+        
         queryWrapper.eq(ObjUtil.isNotEmpty(picSize), "picSize", picSize);
         queryWrapper.eq(ObjUtil.isNotEmpty(picScale), "picScale", picScale);
 
@@ -268,6 +293,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceId), "spaceId", spaceId);
         queryWrapper.isNull(nullSpaceId, "spaceId");
+
+        queryWrapper.ge(ObjUtil.isNotEmpty(startEditTime), "editTime", startEditTime);
+        queryWrapper.lt(ObjUtil.isNotEmpty(endEditTime), "editTime", endEditTime);
 
 
         // JSON 数组查询

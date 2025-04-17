@@ -6,16 +6,20 @@
         <h2>{{ space.spaceName }}</h2>
         <a-space>
           <a-tag v-if="space.spaceLevel === 0" color="blue" class="space-level-tag">
-            <star-outlined /> {{ SPACE_LEVEL_MAP[0] }} Space
+            <star-outlined />
+            {{ SPACE_LEVEL_MAP[0] }} Space
           </a-tag>
           <a-tag v-else-if="space.spaceLevel === 1" color="green" class="space-level-tag">
-            <trophy-outlined /> {{ SPACE_LEVEL_MAP[1] }} Space
+            <trophy-outlined />
+            {{ SPACE_LEVEL_MAP[1] }} Space
           </a-tag>
           <a-tag v-else-if="space.spaceLevel === 2" color="gold" class="space-level-tag">
-            <crown-outlined /> {{ SPACE_LEVEL_MAP[2] }} Space
+            <crown-outlined />
+            {{ SPACE_LEVEL_MAP[2] }} Space
           </a-tag>
           <a-tag v-else color="blue" class="space-level-tag">
-            <star-outlined /> {{ SPACE_LEVEL_MAP[0] }} Space
+            <star-outlined />
+            {{ SPACE_LEVEL_MAP[0] }} Space
           </a-tag>
         </a-space>
       </a-flex>
@@ -33,6 +37,11 @@
       </a-space>
     </a-flex>
     <div style="margin-bottom: 16px"></div>
+    <!--搜索表单-->
+    <PictureSearchForm :onSearch="onSearch" />
+    <div style="margin-bottom: 16px"></div>
+
+
     <!-- 图片列表 -->
     <PictureList :dataList="dataList" :loading="loading" :showOp="true" :onReload="fetchData" />
     <a-pagination
@@ -56,7 +65,11 @@
 
 <script setup lang="ts">
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
-import { DeleteOutlined, DownloadOutlined, EditOutlined, CrownOutlined, StarOutlined, TrophyOutlined } from '@ant-design/icons-vue'
+import {
+  CrownOutlined,
+  StarOutlined,
+  TrophyOutlined
+} from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref, h } from 'vue'
 import {
   deleteSpaceUsingPost,
@@ -69,6 +82,7 @@ import { formatSize } from '@/utils'
 import PictureList from '@/components/PictureList.vue'
 import { SPACE_LEVEL_MAP, SPACE_LEVEL_ENUM } from '@/constants/space.ts'
 import PicturePopUpUploadModal from '@/components/PicturePopUpUploadModal.vue'
+import PictureSearchForm from '@/components/PictureSearchForm.vue'
 
 
 // 数据
@@ -110,7 +124,10 @@ const fetchSpaceDetail = async () => {
 
 // ------------获取图片列表------------
 // 搜索条件
-const searchParams = reactive<API.PictureQueryRequest>({
+// ref 包装的是一个带有 .value 的引用对象可以完全替换 .value 的内容，Vue 会保持响应性
+// reactive 直接代理对象本身必须保持对象的引用不变，只能修改其属性如果整体替换会丢失响应性
+// 为了后面整体替换这里用ref
+const searchParams = ref<API.PictureQueryRequest>({
   current: 1,
   pageSize: 24,
   sortField: 'createTime',
@@ -119,8 +136,8 @@ const searchParams = reactive<API.PictureQueryRequest>({
 
 // 分页参数
 const onPageChange = (page: number, pageSize: number) => {
-  searchParams.current = page
-  searchParams.pageSize = pageSize
+  searchParams.value.current = page
+  searchParams.value.pageSize = pageSize
   fetchData()
 }
 
@@ -130,7 +147,7 @@ const fetchData = async () => {
   // 转换搜索参数
   const params = {
     spaceId: props.id,
-    ...searchParams,
+    ...searchParams.value,
     tags: [] as String[]
   }
   // if (selectedCategory.value !== 'all') {
@@ -158,7 +175,7 @@ onMounted(() => {
 
 const doSearch = () => {
   // 重置搜索条件
-  searchParams.current = 1
+  searchParams.value.current = 1
   fetchData()
 }
 
@@ -192,6 +209,18 @@ const uploadModalVisible = ref(false)
 const showUploadModal = () => {
   uploadModalVisible.value = true
 }
+
+const onSearch = (newSearchParams: API.PictureQueryRequest) => {
+  console.log("new",newSearchParams)
+  searchParams.value = {
+    ...searchParams.value,
+    ...newSearchParams,
+    current: 1
+  }
+  console.log("old",searchParams)
+  fetchData()
+}
+
 </script>
 
 <style scoped>

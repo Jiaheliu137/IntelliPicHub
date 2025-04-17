@@ -74,7 +74,7 @@
               Reject
             </a-button>
             <a-button type="primary" @click="doDownload">
-              Free download
+              Download Original
               <template #icon>
                 <DownloadOutlined />
               </template>
