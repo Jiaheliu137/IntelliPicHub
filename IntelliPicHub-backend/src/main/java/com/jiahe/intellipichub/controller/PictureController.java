@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.jiahe.intellipichub.annotation.AuthCheck;
+import com.jiahe.intellipichub.api.imagesearch.ImageSearchApiFacade;
+import com.jiahe.intellipichub.api.imagesearch.model.ImageSearchResult;
 import com.jiahe.intellipichub.common.BaseResponse;
 import com.jiahe.intellipichub.common.DeleteRequest;
 import com.jiahe.intellipichub.common.ResultUtils;
@@ -13,6 +15,7 @@ import com.jiahe.intellipichub.constant.UserConstant;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.exception.ThrowUtils;
+import com.jiahe.intellipichub.model.dto.SearchPictureByPictureRequest;
 import com.jiahe.intellipichub.model.dto.picture.*;
 import com.jiahe.intellipichub.model.entity.Picture;
 import com.jiahe.intellipichub.model.entity.Space;
@@ -327,6 +330,12 @@ public class PictureController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 批量抓取图片
+     * @param pictureUploadByBatchRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/upload/batch")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Integer> uploadPictureByBatch(@RequestBody PictureUploadByBatchRequest pictureUploadByBatchRequest, HttpServletRequest request) {
@@ -334,6 +343,20 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         int uploadCount = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser);
         return ResultUtils.success(uploadCount);
+    }
+
+    /**
+     * 以图搜图
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAMS_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAMS_ERROR);
+        Picture oldPicture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
+        return ResultUtils.success(resultList);
     }
 
 

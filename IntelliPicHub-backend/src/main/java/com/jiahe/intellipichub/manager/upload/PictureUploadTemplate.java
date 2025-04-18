@@ -52,6 +52,12 @@ public abstract class PictureUploadTemplate {
         String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
         // 保存原始图像URL
         String originalUrl = cosClientConfig.getHost() + uploadPath;
+        
+        // 检查是否为GIF格式 - 仅用于日志记录
+        boolean isGif = FileUtil.getSuffix(originFilename).toLowerCase().equals("gif");
+        if (isGif) {
+            log.info("Processing GIF file: {}", originFilename);
+        }
 
         File file = null;
         try {
@@ -68,23 +74,30 @@ public abstract class PictureUploadTemplate {
             //  获取图片处理后的结果
             ProcessResults processResults = putObjectResult.getCiUploadResult().getProcessResults();
             List<CIObject> objectList = processResults.getObjectList();
+            
             if (CollUtil.isNotEmpty(objectList)) {
-                // 获取压缩之后为webp后的结果
-                CIObject compressedCiObject = objectList.get(0);
-                // 缩略图默认等于压缩图
-                CIObject thubmnailCiObject = compressedCiObject;
-                // 有生成缩略图才获取缩略图
-                if(objectList.size()>1){
-                    thubmnailCiObject = objectList.get(1);
+                // 获取处理结果(对于非GIF为压缩图，对于GIF为缩略图)
+                CIObject ciObject = objectList.get(0);
+                
+                // 如果是GIF图片，使用原图URL作为压缩图URL
+                if (isGif) {
+                    return buildResult(originFilename, file, imageInfo, originalUrl, objectList);
                 }
-                // 封装压缩图的返回结果
-                return buildResult(originFilename, compressedCiObject, originalUrl, thubmnailCiObject);
-
+                
+                // 缩略图默认等于第一个结果
+                CIObject thumbnailCiObject = ciObject;
+                // 有生成缩略图才获取缩略图(第二个结果)
+                if(objectList.size() > 1){
+                    thumbnailCiObject = objectList.get(1);
+                }
+                
+                return buildResult(originFilename, ciObject, originalUrl, thumbnailCiObject);
             }
-            // 如果压缩图不存在，则使用原始图片信息
+            
+            // 如果没有生成任何处理后的结果，使用原图
             return buildResult(originFilename, file, uploadPath, imageInfo, originalUrl);
         } catch (Exception e) {
-            log.error("Failed to upload image to object storage, filepath = ", e);
+            log.error("Failed to upload image to object storage, filepath = {}", uploadPath, e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Upload failed");
         } finally {
             // 6. 清理临时文件
@@ -176,7 +189,46 @@ public abstract class PictureUploadTemplate {
 
 
     /**
-     * 封装返回结果
+     * 为GIF图片构建结果
+     * 
+     * @param originFilename 原始文件名
+     * @param file 文件
+     * @param imageInfo 图片信息
+     * @param originalUrl 原始URL
+     * @param objectList 处理结果列表
+     * @return 上传结果
+     */
+    private UploadPictureResult buildResult(String originFilename, File file, ImageInfo imageInfo, String originalUrl, List<CIObject> objectList) {
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int picWidth = imageInfo.getWidth();
+        int picHeight = imageInfo.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        
+        // 设置图片格式为gif
+        uploadPictureResult.setPicFormat("gif");
+        
+        uploadPictureResult.setPicSize(FileUtil.size(file));
+        // 对于GIF，压缩图URL使用原图URL
+        uploadPictureResult.setUrl(originalUrl);
+        uploadPictureResult.setOriginalUrl(originalUrl);
+        
+        // 设置缩略图URL(如果有)
+        if (CollUtil.isNotEmpty(objectList)) {
+            uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + objectList.get(0).getKey());
+        } else {
+            // 没有缩略图也用原图
+            uploadPictureResult.setThumbnailUrl(originalUrl);
+        }
+        
+        return uploadPictureResult;
+    }
+
+    /**
+     * 封装返回结果（不带缩略图路径）
      *
      * @param originFilename 原始文件名
      * @param file 文件
@@ -202,6 +254,8 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicSize(FileUtil.size(file));
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + uploadPath);
         uploadPictureResult.setOriginalUrl(originalUrl);
+        // 如果没有缩略图，缩略图地址也使用原图
+        uploadPictureResult.setThumbnailUrl(originalUrl);
         return uploadPictureResult;
     }
 

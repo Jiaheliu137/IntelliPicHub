@@ -69,13 +69,18 @@ public class CosManager {
         // 图片处理操作列表
         List<PicOperations.Rule> rules = new ArrayList<>();
 
-        // 1. 图片压缩（转为webp格式）（原图压缩为webp）
-        String webpKey = FileUtil.mainName(key)+".webp";
-        PicOperations.Rule compressRule = new PicOperations.Rule();
-        compressRule.setFileId(webpKey);
-        compressRule.setBucket(cosClientConfig.getBucket());
-        compressRule.setRule("imageMogr2/format/webp");
-        rules.add(compressRule);
+        // 检查是否为GIF格式
+        boolean isGif = FileUtil.getSuffix(key).toLowerCase().equals("gif");
+        
+        // 1. 非GIF图片才进行webp转换
+        if (!isGif) {
+            String webpKey = FileUtil.mainName(key)+".webp";
+            PicOperations.Rule compressRule = new PicOperations.Rule();
+            compressRule.setFileId(webpKey);
+            compressRule.setBucket(cosClientConfig.getBucket());
+            compressRule.setRule("imageMogr2/format/webp");
+            rules.add(compressRule);
+        }
         
         // 2. 缩略图处理（原图处理为缩略图），仅对20kB以上的图片生成缩略图
         if (file.length() > 20 * 1024) {
@@ -88,7 +93,6 @@ public class CosManager {
             thumbnailRule.setRule(String.format("imageMogr2/thumbnail/%sx%s>",256,256));
             rules.add(thumbnailRule);
         }
-
 
         // 构造处理参数
         picOperations.setRules(rules);

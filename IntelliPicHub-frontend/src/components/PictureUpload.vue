@@ -47,6 +47,18 @@ const loading = ref<boolean>(false)
 const handleUpload = async ({ file }: any) => {
   loading.value = true
   try {
+    // 检查GIF文件的处理
+    if (file.type === 'image/gif') {
+      // 确保GIF文件名有.gif后缀
+      const fileName = file.name
+      if (!fileName.toLowerCase().endsWith('.gif')) {
+        // 创建新的File对象，修改文件名
+        const renamedFile = new File([file], `${fileName}.gif`, { type: file.type })
+        file = renamedFile
+        console.log('Renamed GIF file to ensure .gif extension:', file.name)
+      }
+    }
+
     const params:API.PictureUploadRequest = props.picture ? { id: props.picture.id } : {}
     params.spaceId = props.spaceId
     const res = await uploadPictureUsingPost(params, {}, file)
@@ -56,9 +68,10 @@ const handleUpload = async ({ file }: any) => {
       // 上传成功后调用父组件传递的 onSuccess 回调，通知父组件更新 picture 数据
       props.onSuccess?.(res.data.data) // 调用父组件的 onSuccess 函数，传递上传的数据,这个时候就把数据传递给父组件了，而父组件的picture又是响应式的
     } else {
-      message.error('Picture upload failed，' + res.data.message)
+      message.error('Picture upload failed，' + (res.data.message || ''))
     }
   } catch (error) {
+    console.error('Upload error:', error)
     message.error('Picture upload failed')
   } finally {
     loading.value = false
@@ -72,16 +85,16 @@ const handleUpload = async ({ file }: any) => {
  */
 const beforeUpload = (file: UploadProps['fileList'][number]) => {
   // 校验图片格式
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/webp' || file.type === 'image/gif'
   if (!isJpgOrPng) {
-    message.error('Don not support this format，recommend jpg，jpeg，png')
+    message.error('Don not support this format，recommend jpg，jpeg，png，webp，gif')
   }
   // 校验图片大小
-  const isLt5M = file.size / 1024 / 1024 < 5
-  if (!isLt5M) {
-    message.error('Image must smaller than 2MB!')
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    message.error('Image must smaller than 10MB!')
   }
-  return isJpgOrPng && isLt5M
+  return isJpgOrPng && isLt10M
 }
 </script>
 <style scoped>

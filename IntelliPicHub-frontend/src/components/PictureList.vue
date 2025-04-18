@@ -9,6 +9,7 @@
     >
       <template #renderItem="{ item: picture }">
         <a-list-item style="padding: 0">
+<!--          单张图片-->
           <a-card
             hoverable
             class="picture-card"
@@ -23,12 +24,16 @@
               />
             </template>
             <template v-if="showOp" #actions>
+              <a-space @click="(e) => doSearch(picture, e)">
+                <SearchOutlined />
+                Search
+              </a-space>
               <a-space @click="e => doEdit(picture,e)">
-                <edit-outlined key="edit" />
+                <EditOutlined  />
                 Edit
               </a-space>
               <a-space @click="e => doDelete(picture,e)">
-                <delete-outlined key="delete" />
+                <DeleteOutlined  />
                 Delete
               </a-space>
             </template>
@@ -54,7 +59,7 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { EditOutlined, DeleteOutlined, SearchOutlined} from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { deletePictureUsingPost } from '@/api/pictureController.ts'
 
@@ -86,6 +91,13 @@ const doClickPicture = (picture: API.PictureVO) => {
   router.push({
     path: `/picture/${picture.id}`
   })
+}
+
+const doSearch = (picture, e) => {
+  // 阻止冒泡
+  e.stopPropagation()
+  // 打开新的页面
+  window.open(`/search_picture?pictureId=${picture.id}`)
 }
 
 // 编辑
@@ -127,7 +139,7 @@ const doDelete = async (picture, e) => {
 <style scoped>
 /* 定义CSS变量 */
 .pictureList {
-  --overlay-opacity: 0.2;
+  --overlay-opacity: 0.6;
   --text-opacity: 0.6;
 }
 

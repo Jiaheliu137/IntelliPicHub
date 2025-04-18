@@ -52,7 +52,7 @@ public class UrlPictureUpload extends PictureUploadTemplate {
             // 不为空才校验是否合法
             if(StrUtil.isNotBlank(contentType)){
                 // 允许的图片类型
-                final List<String> ALLOW_FORMAT_LIST = Arrays.asList("image/jpeg", "image/png", "image/jpg", "image/webp");
+                final List<String> ALLOW_FORMAT_LIST = Arrays.asList("image/jpeg", "image/png", "image/jpg", "image/webp","image/gif");
                 ThrowUtils.throwIf(!ALLOW_FORMAT_LIST.contains(contentType), ErrorCode.PARAMS_ERROR, "File format is not allowed");
             }
 
