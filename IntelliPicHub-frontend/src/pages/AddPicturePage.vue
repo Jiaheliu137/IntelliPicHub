@@ -18,8 +18,14 @@
 
 
 <!--    图片信息表单-->
-    <a-form v-if="picture" name="pictureForm" layout="vertical" :model="pictureForm" @finish="handleSubmit">
-      <a-form-item name="name" label="Name">
+    <a-form
+      v-if="picture"
+      name="pictureForm"
+      layout="vertical"
+      :model="pictureForm"
+      @finish="handleSubmit">
+      <a-form-item name="name" label="Name"
+      >
         <a-input
           v-model:value="pictureForm.name"
           placeholder="Input picture name"

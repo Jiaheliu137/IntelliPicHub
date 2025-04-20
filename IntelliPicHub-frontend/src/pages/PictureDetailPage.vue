@@ -50,9 +50,24 @@
             <a-descriptions-item label="Size">
               {{ formatSize(picture.picSize) }}
             </a-descriptions-item>
+            <a-descriptions-item label="Color tone">
+              <a-space>
+                {{ picture.picColor ?? '-' }}
+                <div :style="{
+                  width: '24px',
+                  height: '18px',
+                  backgroundColor: picture.picColor ? toHexColor(picture.picColor) : 'transparent'
+                }"
+                >
+              </div>
+              </a-space>
+            </a-descriptions-item>
           </a-descriptions>
           <!--          图片操作-->
           <a-space wrap>
+            <a-button :icon="h(ShareAltOutlined)"  type="primary" ghost @click="doShare">
+              Share
+            </a-button>
             <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
               Edit
             </a-button>
@@ -83,12 +98,14 @@
         </a-card>
       </a-col>
     </a-row>
+    <ShareModal ref="shareModalRef" :link="shareLink" />
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
-import { DeleteOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, DownloadOutlined, EditOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import { computed, onMounted, reactive, ref, h } from 'vue'
 import {
   deletePictureUsingPost,
@@ -99,9 +116,10 @@ import {
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
-import { downloadImage, formatSize } from '../utils'
+import { downloadImage, formatSize, toHexColor } from '../utils'
 import router from '@/router'
 import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture.ts'
+import ShareModal from '@/components/ShareModal.vue'
 
 const loginUserStore = useLoginUserStore()
 
@@ -145,7 +163,7 @@ const handleReview = async (pic: API.Picture, reviewStatus: number) => {
 
 // 处理下载
 const doDownload = () => {
-  downloadImage(picture.value.url)
+  downloadImage(picture.value.originalUrl)
 }
 
 // 编辑
@@ -203,6 +221,24 @@ const fetchPictureDetail = async () => {
 onMounted(() => {
   fetchPictureDetail()
 })
+
+// -----------分享操作-------------
+
+const shareModalRef = ref()
+// 分享链接
+const shareLink = ref<string>('')
+// 分享函数
+const doShare = (e) => {
+
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.value.id}`
+  // shareModalRef 是一个 Vue 的 ref 引用，用于获取子组件 ShareModal 的实例
+  if (shareModalRef.value) {
+    shareModalRef.value.openModal()
+  }
+}
+
+
+
 </script>
 
 <style scoped>

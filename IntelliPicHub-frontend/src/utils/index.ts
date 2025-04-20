@@ -23,3 +23,22 @@ export function downloadImage(url?: string, fileName?: string) {
   }
   saveAs(url, fileName)
 }
+
+
+/**
+ * 将颜色值转换为标准 #RRGGBB格式
+ * @param input
+ */
+export function toHexColor(input) {
+  // 去掉 0x 前缀
+  const colorValue = input.startsWith('0x') ? input.slice(2) : input
+
+  // 将剩余部分解析为十六进制数，再转成 6 位十六进制字符串
+  // parseInt(colorValue, 16) 会将 colorValue 解析为 十六进制 字符串，然后返回对应的 十进制数值。
+  // toString() 默认会将数字转换为 十进制 字符串，这里指定了16进制
+  const hexColor = parseInt(colorValue, 16).toString(16).padStart(6, '0')
+
+  // 返回标准 #RRGGBB 格式
+  return `#${hexColor}`
+}
+

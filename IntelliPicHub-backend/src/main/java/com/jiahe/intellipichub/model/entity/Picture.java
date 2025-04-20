@@ -130,6 +130,11 @@ public class Picture implements Serializable {
      */
     private Date reviewTime;
 
+    /**
+     * Picture main color tone
+     */
+    private String picColor;
+
 
 
     @TableField(exist = false)

@@ -141,14 +141,17 @@
         </a-collapse-panel>
       </a-collapse>
     </a-form>
+
+
   </div>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import dayjs from 'dayjs'
-import { listPictureTagCategoryUsingGet } from '@/api/pictureController.ts'
+import { listPictureTagCategoryUsingGet, searchPictureByColorUsingPost } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import { DownOutlined } from '@ant-design/icons-vue'
+
 
 interface Props {
   onSearch?: (searchParams: Record<string, unknown>) => void
@@ -196,6 +199,8 @@ const rangePresets = ref([
   { label: 'Past 30 days', value: [dayjs().add(-30, 'd'), dayjs()] },
   { label: 'Past 90 days', value: [dayjs().add(-90, 'd'), dayjs()] },
 ])
+
+
 
 
 /**

@@ -34,7 +34,7 @@
         <a-auto-complete
           v-model:value="pictureForm.category"
           placeholder="Input categories"
-          :options="categoryOptions"
+          :options="optionsForCategory"
           allow-clear
         />
       </a-form-item>
@@ -44,7 +44,7 @@
           v-model:value="pictureForm.tags"
           mode="tags"
           placeholder="Input tags"
-          :options="tagOptions"
+          :options="optionsForTag"
           allow-clear
         >
         </a-select>
@@ -68,6 +68,8 @@ import UrlPictureUpload from '@/components/UrlPictureUpload.vue';
 const visible = defineModel<boolean>('visible');
 const props = defineProps<{
   spaceId?: number;
+  categoryOptions?: {value: string, label: string}[];
+  tagOptions?: {value: string, label: string}[];
 }>();
 const emit = defineEmits(['success', 'cancel']);
 
@@ -82,8 +84,21 @@ const pictureForm = reactive<API.PictureEditRequest>({
 // 分类和标签选项
 const categoryList = ref<string[]>([]);
 const tagList = ref<string[]>([]);
-const categoryOptions = ref<{value: string, label: string}[]>([]);
-const tagOptions = ref<{value: string, label: string}[]>([]);
+const optionsForCategory = ref<{value: string, label: string}[]>([]);
+const optionsForTag = ref<{value: string, label: string}[]>([]);
+
+// 当父组件传递选项时使用
+watch(() => props.categoryOptions, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    optionsForCategory.value = newVal;
+  }
+}, { immediate: true });
+
+watch(() => props.tagOptions, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    optionsForTag.value = newVal;
+  }
+}, { immediate: true });
 
 // 清除数据
 watch(visible, (newVal) => {
@@ -143,6 +158,12 @@ const handleSubmit = async () => {
 
 // 获取标签和分类选项
 const getTagCategoryOptions = async () => {
+  // 如果父组件已经传了选项就不需要请求
+  if ((props.categoryOptions && props.categoryOptions.length > 0) ||
+      (props.tagOptions && props.tagOptions.length > 0)) {
+    return;
+  }
+
   try {
     const res = await listPictureTagCategoryUsingGet();
     if (res.data.code === 0 && res.data.data) {
@@ -151,12 +172,12 @@ const getTagCategoryOptions = async () => {
       tagList.value = res.data.data.tagList ?? [];
 
       // 转换为选项格式
-      categoryOptions.value = categoryList.value.map(category => ({
+      optionsForCategory.value = categoryList.value.map(category => ({
         value: category,
         label: category
       }));
 
-      tagOptions.value = tagList.value.map(tag => ({
+      optionsForTag.value = tagList.value.map(tag => ({
         value: tag,
         label: tag
       }));

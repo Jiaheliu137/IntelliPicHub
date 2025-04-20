@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import static com.jiahe.intellipichub.utils.HexColorExpander.expandHexColor;
+
 
 /**
  * 图片上传模板
@@ -41,25 +43,28 @@ public abstract class PictureUploadTemplate {
      * 模板方法，定义上传流程,final修饰的类不能被继承，final修饰的方法不能被override，final修饰的变量不能被更改
      */
     public final UploadPictureResult uploadPicture(Object inputSource, String uploadPathPrefix) {
-        // 1. 校验图片
+        // 1. 先校验
         validPicture(inputSource);
-
-        // 2. 图片上传地址
-        String uuid = RandomUtil.randomString(16);
+        // 获取文件原始名称
         String originFilename = getOriginFilename(inputSource);
-        String uploadFilename = String.format("%s_%s.%s", DateUtil.formatDate(new Date()), uuid,
-                FileUtil.getSuffix(originFilename));
-        String uploadPath = String.format("/%s/%s", uploadPathPrefix, uploadFilename);
-        // 保存原始图像URL
-        String originalUrl = cosClientConfig.getHost() + uploadPath;
-        
-        // 检查是否为GIF格式 - 仅用于日志记录
-        boolean isGif = FileUtil.getSuffix(originFilename).toLowerCase().equals("gif");
-        if (isGif) {
-            log.info("Processing GIF file: {}", originFilename);
+        // 2. 构造存储路径为 aa/bb/cc/yyyyMMddHHmmssSSS-随机数.jpg
+        String suffix = FileUtil.getSuffix(originFilename);
+        String uuid = RandomUtil.randomString(8);
+        String filename = DateUtil.format(new Date(), "yyyyMMddHHmmssSSS") + "-" + uuid;
+        String uploadPath;
+        if (StrUtil.isBlank(suffix)) {
+            uploadPath = uploadPathPrefix + "/" + filename;
+        } else {
+            uploadPath = uploadPathPrefix + "/" + filename + "." + suffix;
         }
 
+        // 检查是否为GIF
+        boolean isGif = !StrUtil.isBlank(suffix) && suffix.toLowerCase().equals("gif");
+
         File file = null;
+        // 生成原图URL
+        String originalUrl = cosClientConfig.getHost() + "/" + uploadPath;
+
         try {
             // 3. 在服务器创建临时文件
             file = File.createTempFile(uploadPath, null);
@@ -91,7 +96,8 @@ public abstract class PictureUploadTemplate {
                     thumbnailCiObject = objectList.get(1);
                 }
                 
-                return buildResult(originFilename, ciObject, originalUrl, thumbnailCiObject);
+                // 使用新方法，传入file参数以获取原图大小
+                return buildResult(originFilename, ciObject, file, originalUrl, thumbnailCiObject, imageInfo);
             }
             
             // 如果没有生成任何处理后的结果，使用原图
@@ -156,14 +162,16 @@ public abstract class PictureUploadTemplate {
 
 
     /**
-     * 封装返回结果
+     * 封装返回结果（新增方法，增加file参数获取原图大小）
      * @param originFilename 原始文件名
      * @param compressedCiObject 压缩后的对象
+     * @param file 原始文件
      * @param originalUrl 原始图像URL
-     * @param thubmnailCiObject 缩略图对象
-     * @return
+     * @param thumbnailCiObject 缩略图对象
+     * @param imageInfo 图片信息
+     * @return 上传结果
      */
-    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, String originalUrl,CIObject thubmnailCiObject) {
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, File file, String originalUrl, CIObject thumbnailCiObject, ImageInfo imageInfo) {
         UploadPictureResult uploadPictureResult = new UploadPictureResult();
         int picWidth = compressedCiObject.getWidth();
         int picHeight = compressedCiObject.getHeight();
@@ -172,25 +180,27 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        
+        uploadPictureResult.setPicColor(expandHexColor(imageInfo.getAve()));
+
         // 使用从原始URL中提取的格式，如果无法提取则使用压缩后的webp格式
         String picFormat = extractFormatFromOriginalUrl(originFilename, compressedCiObject.getFormat());
         uploadPictureResult.setPicFormat(picFormat);
         
-        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
-        // 设置压缩为webp的原图url
+        // 使用原图文件大小
+        uploadPictureResult.setPicSize(FileUtil.size(file));
+        // 设置压缩为webp的原图urlzz
         uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
         // 设置原图url
         uploadPictureResult.setOriginalUrl(originalUrl);
         // 设置缩略图地址
-        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thubmnailCiObject.getKey());
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
         return uploadPictureResult;
     }
 
 
     /**
      * 为GIF图片构建结果
-     * 
+     *
      * @param originFilename 原始文件名
      * @param file 文件
      * @param imageInfo 图片信息
@@ -207,7 +217,8 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        
+        uploadPictureResult.setPicColor(expandHexColor(imageInfo.getAve()));
+
         // 设置图片格式为gif
         uploadPictureResult.setPicFormat("gif");
         
@@ -246,7 +257,9 @@ public abstract class PictureUploadTemplate {
         uploadPictureResult.setPicWidth(picWidth);
         uploadPictureResult.setPicHeight(picHeight);
         uploadPictureResult.setPicScale(picScale);
-        
+        uploadPictureResult.setPicColor(expandHexColor(imageInfo.getAve()));
+
+
         // 使用从原始URL中提取的格式，如果无法提取则使用imageInfo中的格式
         String picFormat = extractFormatFromOriginalUrl(originFilename, imageInfo.getFormat());
         uploadPictureResult.setPicFormat(picFormat);
@@ -270,6 +283,42 @@ public abstract class PictureUploadTemplate {
         if (!deleteResult) {
             log.error("file delete error, filepath = {}", file.getAbsolutePath());
         }
+    }
+
+    /**
+     * 封装返回结果（保留原方法，兼容已有调用）
+     * @param originFilename 原始文件名
+     * @param compressedCiObject 压缩后的对象
+     * @param originalUrl 原始图像URL
+     * @param thumbnailCiObject 缩略图对象
+     * @param imageInfo 图片主色调
+     * @return 上传结果
+     */
+    @Deprecated
+    private UploadPictureResult buildResult(String originFilename, CIObject compressedCiObject, String originalUrl, CIObject thumbnailCiObject, ImageInfo imageInfo) {
+        UploadPictureResult uploadPictureResult = new UploadPictureResult();
+        int picWidth = compressedCiObject.getWidth();
+        int picHeight = compressedCiObject.getHeight();
+        double picScale = NumberUtil.round(picWidth * 1.0 / picHeight, 2).doubleValue();
+        uploadPictureResult.setPicName(FileUtil.mainName(originFilename));
+        uploadPictureResult.setPicWidth(picWidth);
+        uploadPictureResult.setPicHeight(picHeight);
+        uploadPictureResult.setPicScale(picScale);
+        uploadPictureResult.setPicColor(expandHexColor(imageInfo.getAve()));
+
+        // 使用从原始URL中提取的格式，如果无法提取则使用压缩后的webp格式
+        String picFormat = extractFormatFromOriginalUrl(originFilename, compressedCiObject.getFormat());
+        uploadPictureResult.setPicFormat(picFormat);
+        
+        // 使用压缩后的webp大小
+        uploadPictureResult.setPicSize(compressedCiObject.getSize().longValue());
+        // 设置压缩为webp的原图urlzz
+        uploadPictureResult.setUrl(cosClientConfig.getHost() + "/" + compressedCiObject.getKey());
+        // 设置原图url
+        uploadPictureResult.setOriginalUrl(originalUrl);
+        // 设置缩略图地址
+        uploadPictureResult.setThumbnailUrl(cosClientConfig.getHost() + "/" + thumbnailCiObject.getKey());
+        return uploadPictureResult;
     }
 }
 

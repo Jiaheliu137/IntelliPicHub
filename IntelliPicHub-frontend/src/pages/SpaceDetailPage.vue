@@ -25,6 +25,7 @@
       </a-flex>
       <a-space size="middle">
         <a-button type="primary" @click="showUploadModal">+ Add Picture</a-button>
+        <a-button :icon="h(EditOutlined)" @click="doBatchEdit">Batch Edit</a-button>
         <a-tooltip
           :title="`Used Space ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
         >
@@ -39,6 +40,12 @@
     <div style="margin-bottom: 16px"></div>
     <!--搜索表单-->
     <PictureSearchForm :onSearch="onSearch" />
+
+    <!-- 按颜色搜索 -->
+    <a-form-item label="Search Color" style="margin-top: 16px">
+      <color-picker format="hex" @pureColorChange="onColorChange" />
+    </a-form-item>
+
     <div style="margin-bottom: 16px"></div>
 
 
@@ -57,32 +64,47 @@
     <!-- 使用图片上传弹窗组件 -->
     <PicturePopUpUploadModal
       v-model:visible="uploadModalVisible"
-      :spaceId="space.id"
+      :spaceId="id"
+      :categoryOptions="categoryOptions"
+      :tagOptions="tagOptions"
       @success="fetchData"
+    />
+    <BatchEditPictureModal
+      ref="batchEditPictureModalRef"
+      :spaceId="id"
+      :editPictureList="dataList"
+      :categoryOptions="categoryOptions"
+      :tagOptions="tagOptions"
+      @success="onBatchEditPictureSuccess"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import {
-  CrownOutlined,
+  CrownOutlined, EditOutlined,
   StarOutlined,
   TrophyOutlined
 } from '@ant-design/icons-vue'
-import { computed, onMounted, reactive, ref, h } from 'vue'
+import { onMounted, ref, h } from 'vue'
 import {
-  deleteSpaceUsingPost,
   getSpaceVoByIdUsingGet
 
 } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
-import { listPictureTagCategoryUsingGet, listPictureVoByPageUsingPost } from '@/api/pictureController.ts'
+import {
+  listPictureTagCategoryUsingGet,
+  listPictureVoByPageUsingPost,
+  searchPictureByColorUsingPost
+} from '@/api/pictureController.ts'
 import { formatSize } from '@/utils'
 import PictureList from '@/components/PictureList.vue'
-import { SPACE_LEVEL_MAP, SPACE_LEVEL_ENUM } from '@/constants/space.ts'
+import { SPACE_LEVEL_MAP } from '@/constants/space.ts'
 import PicturePopUpUploadModal from '@/components/PicturePopUpUploadModal.vue'
 import PictureSearchForm from '@/components/PictureSearchForm.vue'
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
+import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 
 
 // 数据
@@ -95,6 +117,10 @@ const categoryList = ref<string[]>([])
 const selectedCategory = ref<string>('all')
 const tagList = ref<string[]>([])
 const selectedTagList = ref<boolean[]>([])
+
+// 分类和标签选项
+const categoryOptions = ref<{ value: string, label: string }[]>([])
+const tagOptions = ref<{ value: string, label: string }[]>([])
 
 interface Props {
   id: string | number
@@ -150,14 +176,6 @@ const fetchData = async () => {
     ...searchParams.value,
     tags: [] as String[]
   }
-  // if (selectedCategory.value !== 'all') {
-  //   params.category = selectedCategory.value
-  // }
-  // selectedTagList.value.forEach((useTag, index) => {
-  //   if (useTag) {
-  //     params.tags.push(tagList.value[index])
-  //   }
-  // })
   const res = await listPictureVoByPageUsingPost(params)
   if (res.data.data) {
     dataList.value = res.data.data.records ?? []
@@ -189,6 +207,17 @@ const getTagCategoryOptions = async () => {
     tagList.value = res.data.data.tagList ?? []
     // 初始化标签选择状态
     selectedTagList.value = new Array(tagList.value.length).fill(false)
+
+    // 转换为选项格式
+    categoryOptions.value = categoryList.value.map(category => ({
+      value: category,
+      label: category
+    }))
+
+    tagOptions.value = tagList.value.map(tag => ({
+      value: tag,
+      label: tag
+    }))
   } else {
     message.error('Fail to load category and tags，' + res.data.message)
   }
@@ -211,14 +240,46 @@ const showUploadModal = () => {
 }
 
 const onSearch = (newSearchParams: API.PictureQueryRequest) => {
-  console.log("new",newSearchParams)
+  console.log('new', newSearchParams)
   searchParams.value = {
     ...searchParams.value,
     ...newSearchParams,
     current: 1
   }
-  console.log("old",searchParams)
+  console.log('old', searchParams)
   fetchData()
+}
+
+// ------------按图片搜索--------------
+const onColorChange = async (color: string) => {
+  loading.value = true
+  const res = await searchPictureByColorUsingPost({
+    picColor: color,
+    spaceId: props.id
+  })
+  if (res.data.code === 0 && res.data.data) {
+    const data = res.data.data ?? []
+    dataList.value = data
+    total.value = data.length
+  } else {
+    message.error('Fail to get data，' + res.data.message)
+  }
+  loading.value = false
+
+}
+
+// ------------批量编辑--------------
+const batchEditPictureModalRef = ref()
+
+// 批量编辑成功
+const onBatchEditPictureSuccess = () => {
+  fetchData()
+}
+
+const doBatchEdit = () => {
+  if (batchEditPictureModalRef.value) {
+    batchEditPictureModalRef.value.openModal()
+  }
 }
 
 </script>

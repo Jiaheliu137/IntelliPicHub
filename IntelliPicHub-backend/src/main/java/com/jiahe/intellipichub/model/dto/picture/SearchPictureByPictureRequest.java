@@ -1,4 +1,4 @@
-package com.jiahe.intellipichub.model.dto;
+package com.jiahe.intellipichub.model.dto.picture;
 
 import lombok.Data;
 

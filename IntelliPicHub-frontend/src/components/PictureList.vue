@@ -9,7 +9,7 @@
     >
       <template #renderItem="{ item: picture }">
         <a-list-item style="padding: 0">
-<!--          单张图片-->
+          <!--          单张图片-->
           <a-card
             hoverable
             class="picture-card"
@@ -24,17 +24,21 @@
               />
             </template>
             <template v-if="showOp" #actions>
+              <a-space @click="(e) => doShare(picture, e)">
+                <ShareAltOutlined />
+                <!--                Share-->
+              </a-space>
               <a-space @click="(e) => doSearch(picture, e)">
                 <SearchOutlined />
-                Search
+                <!--                Search-->
               </a-space>
               <a-space @click="e => doEdit(picture,e)">
-                <EditOutlined  />
-                Edit
+                <EditOutlined />
+                <!--                Edit-->
               </a-space>
               <a-space @click="e => doDelete(picture,e)">
-                <DeleteOutlined  />
-                Delete
+                <DeleteOutlined />
+                <!--                Delete-->
               </a-space>
             </template>
             <div class="picture-overlay">
@@ -52,16 +56,18 @@
         </a-list-item>
       </template>
     </a-list>
-
+    <ShareModal ref="shareModalRef" :link="shareLink" />
   </div>
 </template>
 
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { EditOutlined, DeleteOutlined, SearchOutlined} from '@ant-design/icons-vue'
+import { EditOutlined, DeleteOutlined, SearchOutlined, ShareAltOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { deletePictureUsingPost } from '@/api/pictureController.ts'
+import ShareModal from '@/components/ShareModal.vue'
+import { ref } from 'vue'
 
 /**
  * 组件属性
@@ -130,6 +136,22 @@ const doDelete = async (picture, e) => {
     props.onReload?.()
   } else {
     message.error('Delete failed')
+  }
+}
+
+// -----------分享操作-------------
+
+const shareModalRef = ref()
+// 分享链接
+const shareLink = ref<string>('')
+// 分享函数
+const doShare = (picture, e) => {
+  // 阻止冒泡
+  e.stopPropagation()
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id}`
+  // shareModalRef 是一个 Vue 的 ref 引用，用于获取子组件 ShareModal 的实例
+  if (shareModalRef.value) {
+    shareModalRef.value.openModal()
   }
 }
 

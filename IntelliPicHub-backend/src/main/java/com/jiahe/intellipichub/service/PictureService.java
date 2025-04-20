@@ -9,6 +9,7 @@ import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.vo.PictureVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author jiahe
@@ -108,6 +109,24 @@ public interface PictureService extends IService<Picture> {
      */
     public void deletePicture(long pictureId, User loginUser);
 
+
+    /**
+     * 根据颜色搜索图片
+     *
+     * @param spaceId
+     * @param picColor
+     * @param loginUser
+     * @return
+     */
+    public List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
+
+
+    /**
+     * 批量编辑图片
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 }
 
 

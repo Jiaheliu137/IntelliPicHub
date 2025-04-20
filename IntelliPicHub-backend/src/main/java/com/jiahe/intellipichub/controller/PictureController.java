@@ -15,7 +15,7 @@ import com.jiahe.intellipichub.constant.UserConstant;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.exception.ThrowUtils;
-import com.jiahe.intellipichub.model.dto.SearchPictureByPictureRequest;
+import com.jiahe.intellipichub.model.dto.picture.SearchPictureByPictureRequest;
 import com.jiahe.intellipichub.model.dto.picture.*;
 import com.jiahe.intellipichub.model.entity.Picture;
 import com.jiahe.intellipichub.model.entity.Space;
@@ -357,6 +357,25 @@ public class PictureController {
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
         return ResultUtils.success(resultList);
+    }
+
+
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        String picColor = searchPictureByColorRequest.getPicColor();
+        Long spaceId = searchPictureByColorRequest.getSpaceId();
+        User loginUser = userService.getLoginUser(request);
+        List<PictureVO> result = pictureService.searchPictureByColor(spaceId, picColor, loginUser);
+        return ResultUtils.success(result);
+    }
+
+    @PostMapping("/edit/batch")
+    public BaseResponse<Boolean> editPictureByBatch(@RequestBody PictureEditByBatchRequest pictureEditByBatchRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureEditByBatchRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.editPictureByBatch(pictureEditByBatchRequest, loginUser);
+        return ResultUtils.success(true);
     }
 
 
