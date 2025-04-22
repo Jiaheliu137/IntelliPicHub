@@ -38,6 +38,15 @@ public class UrlPictureUpload extends PictureUploadTemplate {
         // 3. 校验url协议
         ThrowUtils.throwIf(!fileUrl.startsWith("http://")&&!fileUrl.startsWith("https://"), ErrorCode.PARAMS_ERROR, "File URL must start with http or https");
 
+        // 检查是否是阿里云 OSS URL（包含扩图结果）
+        if (fileUrl.contains("oss-cn-shanghai.aliyuncs.com") || 
+            fileUrl.contains("aliyuncs.com") || 
+            fileUrl.contains("ImageOutPainting") || 
+            fileUrl.contains("OSSAccessKeyId")) {
+            // 如果是阿里云OSS链接，则跳过后续验证，直接返回
+            return;
+        }
+
         // 4. 发送head请求验证文件是否存在
         HttpResponse httpResponse = null;
         try{
@@ -62,8 +71,8 @@ public class UrlPictureUpload extends PictureUploadTemplate {
             if(StrUtil.isNotBlank(contentLengthStr)){
                 try{
                     long contentLength = Long.parseLong(contentLengthStr);
-                    long maxFileSize = 1024 * 1024 * 5L;
-                    ThrowUtils.throwIf(contentLength > maxFileSize, ErrorCode.PARAMS_ERROR, "File size can not be more than 5MB");
+                    long maxFileSize = 1024 * 1024 * 10L;
+                    ThrowUtils.throwIf(contentLength > maxFileSize, ErrorCode.PARAMS_ERROR, "File size can not be more than 10MB");
                 }catch(NumberFormatException e){
                     throw new BusinessException(ErrorCode.PARAMS_ERROR, "File size is not a number");
                 }
@@ -80,9 +89,28 @@ public class UrlPictureUpload extends PictureUploadTemplate {
     @Override
     protected String getOriginFilename(Object inputSource) {
         String fileUrl = (String) inputSource;
+        
+        // 对于阿里云 OSS URL，提取文件名可能需要特殊处理
+        if (fileUrl.contains("oss-cn-shanghai.aliyuncs.com") || fileUrl.contains("aliyuncs.com")) {
+            // 去除查询参数部分，获取纯路径
+            String pathPart = fileUrl;
+            if (fileUrl.contains("?")) {
+                pathPart = fileUrl.substring(0, fileUrl.indexOf("?"));
+            }
+            
+            // 提取文件名
+            String fileName = FileUtil.getName(pathPart);
+            
+            // 如果文件名没有后缀，添加.jpg后缀
+            if (!fileName.contains(".")) {
+                fileName = fileName + ".jpg";
+            }
+            
+            return fileName;
+        }
+        
         // 从 URL 中提取完整文件名（包含后缀）
         return FileUtil.getName(fileUrl);
-//        return FileUtil.mainName(fileUrl);
     }
 
     @Override

@@ -8,6 +8,9 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jiahe.intellipichub.api.aliyunai.AliYunAiApi;
+import com.jiahe.intellipichub.api.aliyunai.model.CreateOutPaintingTaskRequest;
+import com.jiahe.intellipichub.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.exception.ThrowUtils;
@@ -79,6 +82,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     @Resource
     private TransactionTemplate transactionTemplate;
 
+    @Resource
+    private AliYunAiApi aliYunAiApi;
+
     @Override
     public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
         // 校验参数
@@ -134,9 +140,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 上传图片,得到图片信息
         // 按照用户id划分目录 => 按照空间划分目录
         String uploadPathPrefix;
-        if (spaceId != null) {
+        if (spaceId == null) {
             // 公共图库
-            uploadPathPrefix = String.format("public/%s", spaceId);
+            uploadPathPrefix = String.format("public/%s", loginUser.getId());
         } else {
             // 个人图库
             uploadPathPrefix = String.format("space/%s", spaceId);
@@ -167,13 +173,26 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         picture.setUserId(loginUser.getId());
         picture.setPicColor(uploadPictureResult.getPicColor());
 
-        // 设置默认分类和标签为"Other"
-        picture.setCategory("Other");
+        // 设置简介（如果提供）
+        if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getIntroduction())) {
+            picture.setIntroduction(pictureUploadRequest.getIntroduction());
+        }
 
-        // 设置默认标签为["Other"]
-        List<String> defaultTags = new ArrayList<>();
-        defaultTags.add("Other");
-        picture.setTags(JSONUtil.toJsonStr(defaultTags));
+        // 设置分类（如果提供，否则使用默认"Other"）
+        if (pictureUploadRequest != null && StrUtil.isNotBlank(pictureUploadRequest.getCategory())) {
+            picture.setCategory(pictureUploadRequest.getCategory());
+        } else {
+            picture.setCategory("Other");
+        }
+
+        // 设置标签（如果提供，否则使用默认["Other"]）
+        if (pictureUploadRequest != null && CollUtil.isNotEmpty(pictureUploadRequest.getTags())) {
+            picture.setTags(JSONUtil.toJsonStr(pictureUploadRequest.getTags()));
+        } else {
+            List<String> defaultTags = new ArrayList<>();
+            defaultTags.add("Other");
+            picture.setTags(JSONUtil.toJsonStr(defaultTags));
+        }
 
         // 插入数据库之前补充审核参数
         this.fillReviewParams(picture, loginUser);
@@ -715,6 +734,30 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         boolean result = this.updateBatchById(pictureList);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
+
+    @Override
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser) {
+        // 获取图片信息
+        Long pictureId = createPictureOutPaintingTaskRequest.getPictureId();
+        // Picture picture = this.getById(pictureId);
+        // ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR, "Picture not exist");
+        Picture picture = Optional.ofNullable(this.getById(pictureId))
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "Picture not exist"));
+        
+        // 权限校验
+        checkPictureAuth(loginUser, picture);
+        
+        // 构造请求参数
+        CreateOutPaintingTaskRequest createOutPaintingTaskRequest = new CreateOutPaintingTaskRequest();
+        CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();
+        input.setImageUrl(picture.getUrl());
+        createOutPaintingTaskRequest.setInput(input);
+        createOutPaintingTaskRequest.setParameters(createPictureOutPaintingTaskRequest.getParameters());
+        
+        // 创建任务
+        return aliYunAiApi.createOutPaintingTask(createOutPaintingTaskRequest);
+        
+    }   
 
     /**
      * nameRule:图片名称_{index}

@@ -3,6 +3,7 @@ package com.jiahe.intellipichub.model.dto.picture;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class PictureUploadRequest implements Serializable {
@@ -24,6 +25,21 @@ public class PictureUploadRequest implements Serializable {
      * 空间id
      */
     private Long spaceId;
+
+    /**
+     * 简介
+     */
+    private String introduction;
+
+    /**
+     * 分类
+     */
+    private String category;
+
+    /**
+     * 标签
+     */
+    private List<String> tags;
 
     private static final long serialVersionUID = 1L;  
 }

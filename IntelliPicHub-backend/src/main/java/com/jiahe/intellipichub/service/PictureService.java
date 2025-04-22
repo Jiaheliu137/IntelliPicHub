@@ -3,6 +3,7 @@ package com.jiahe.intellipichub.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jiahe.intellipichub.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.jiahe.intellipichub.model.dto.picture.*;
 import com.jiahe.intellipichub.model.entity.Picture;
 import com.jiahe.intellipichub.model.entity.User;
@@ -127,6 +128,14 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      */
     public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
+
+    /**
+     * 创建扩图任务
+     * @param createPictureOutPaintingTaskRequest
+     * @param loginUser
+     * @return
+     */
+    public CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 }
 
 

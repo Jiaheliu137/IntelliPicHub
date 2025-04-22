@@ -35,7 +35,7 @@ const loading = ref<boolean>(false)
 const fileUrl = ref<string>()
 
 /**
- * 上传
+ * url上传
  */
 const handleUpload = async () => {
   loading.value = true

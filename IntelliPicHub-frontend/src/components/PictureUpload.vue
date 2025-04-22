@@ -85,9 +85,9 @@ const handleUpload = async ({ file }: any) => {
  */
 const beforeUpload = (file: UploadProps['fileList'][number]) => {
   // 校验图片格式
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/webp' || file.type === 'image/gif'
+  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/jpg' || file.type === 'image/webp'
   if (!isJpgOrPng) {
-    message.error('Don not support this format，recommend jpg，jpeg，png，webp，gif')
+    message.error('Don not support this format，recommend jpg，jpeg，png，webp')
   }
   // 校验图片大小
   const isLt10M = file.size / 1024 / 1024 < 10

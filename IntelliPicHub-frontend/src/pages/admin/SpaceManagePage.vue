@@ -86,8 +86,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
-import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP, PIC_REVIEW_STATUS_OPTIONS } from '../../constants/space.ts'
-import { listSpaceByPageUsingPost } from '@/api/spaceController.ts'
+import { listSpaceByPageUsingPost, deleteSpaceUsingPost } from '@/api/spaceController.ts'
 import { SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS } from '../../constants/space.ts'
 import { formatSize } from '../../utils'
 
@@ -185,6 +184,26 @@ const doTableChange = (page: any) => {
   fetchData()
 }
 
+// 删除空间
+const doDelete = async (id: number) => {
+  if (confirm('Are you sure to delete this space?')) {
+    try {
+      const res = await deleteSpaceUsingPost({
+        id
+      })
+      if (res.data.code === 0) {
+        message.success('Delete successfully')
+        // 重新加载数据
+        fetchData()
+      } else {
+        message.error('Delete failed: ' + res.data.message)
+      }
+    } catch (error) {
+      console.error('Delete space failed:', error)
+      message.error('Delete space failed, please try again later')
+    }
+  }
+}
 
 </script>
 
