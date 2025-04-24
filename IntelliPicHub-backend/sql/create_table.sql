@@ -103,6 +103,8 @@ ALTER TABLE picture
 -- Create index
 CREATE INDEX idx_spaceId ON picture (spaceId);
 
+
+-- Add new column
 ALTER TABLE picture
     ADD COLUMN picColor varchar(16) null comment 'Main color tone of picture';
 

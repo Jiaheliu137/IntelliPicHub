@@ -25,6 +25,7 @@
       </a-flex>
       <a-space size="middle">
         <a-button type="primary" @click="showUploadModal">+ Add Picture</a-button>
+        <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`" target="_blank">Space Analyze</a-button>
         <a-button :icon="h(EditOutlined)" @click="doBatchEdit">Batch Edit</a-button>
         <a-tooltip
           :title="`Used Space ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
@@ -82,6 +83,7 @@
 
 <script setup lang="ts">
 import {
+  BarChartOutlined,
   CrownOutlined, EditOutlined,
   StarOutlined,
   TrophyOutlined

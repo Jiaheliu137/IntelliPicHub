@@ -4,6 +4,8 @@
       <h2>Space Manage</h2>
       <a-space>
         <a-button type="primary" href="/add_space" target="_blank">+ Create space</a-button>
+        <a-button type="primary" ghost href="/space_analyze?queryPublic=1" target="_blank">Analyze public pictures</a-button>
+        <a-button type="primary" ghost href="/space_analyze?queryAll=1" target="_blank">Analyze all pictures</a-button>
       </a-space>
     </a-flex>
     <div style="margin-bottom: 16px"></div>
@@ -71,7 +73,7 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space wrap>
-
+            <a-button type="link" :href="`/space_analyze?spaceId=${record.id}`" target="_blank">Analyze</a-button>
             <a-button type="link" :href="`/add_space?id=${record.id}&fromAdmin=true`" target="_blank">Edit</a-button>
             <a-button danger @click="doDelete(record.id)">Delete</a-button>
           </a-space>

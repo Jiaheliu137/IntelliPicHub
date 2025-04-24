@@ -94,9 +94,7 @@ const router = useRouter()
  * @param picture 图片信息
  */
 const doClickPicture = (picture: API.PictureVO) => {
-  router.push({
-    path: `/picture/${picture.id}`
-  })
+  window.open(`/picture/${picture.id}`, '_blank')
 }
 
 const doSearch = (picture, e) => {
