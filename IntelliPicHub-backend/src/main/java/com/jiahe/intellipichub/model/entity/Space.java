@@ -45,6 +45,12 @@ public class Space implements Serializable {
     private Long totalSize;
 
     /**
+     * Space-type：0-personal 1-group
+     */
+    private Integer spaceType;
+
+
+    /**
      * Total number of images in the space
      */
     private Long totalCount;

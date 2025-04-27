@@ -29,6 +29,15 @@
           allow-clear
         />
       </a-form-item>
+      <a-form-item label="SpaceType" name="spaceType">
+        <a-select
+          v-model:value="searchParams.spaceLevel"
+          :options="SPACE_TYPE_OPTIONS"
+          placeholder="Select space type"
+          style="min-width: 180px"
+          allow-clear
+        />
+      </a-form-item>
 
       <a-form-item label="UserId">
         <a-input v-model:value="searchParams.userId" placeholder="Input user id" allow-clear />
@@ -54,14 +63,16 @@
 
         <template v-if="column.dataIndex === 'spaceLevel'">
           <div>{{ SPACE_LEVEL_MAP[record.spaceLevel] }}</div>
-
+        </template>
+<!--        空间类别-->
+        <template v-if="column.dataIndex === 'spaceType'">
+          <a-tag>{{ SPACE_TYPE_MAP[record.spaceType] }}</a-tag>
         </template>
 
 
         <template v-if="column.dataIndex === 'spaceUseInfo'">
           <div>Size：{{ formatSize(record.totalSize) }}/{{ formatSize(record.maxSize) }}</div>
           <div>Count：{{ record.totalCount }}/{{ record.maxCount }}</div>
-
         </template>
 
 
@@ -89,7 +100,13 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { listSpaceByPageUsingPost, deleteSpaceUsingPost } from '@/api/spaceController.ts'
-import { SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS } from '../../constants/space.ts'
+import {
+  SPACE_LEVEL_MAP,
+  SPACE_LEVEL_OPTIONS,
+  SPACE_TYPE_ENUM,
+  SPACE_TYPE_MAP,
+  SPACE_TYPE_OPTIONS
+} from '../../constants/space.ts'
 import { formatSize } from '../../utils'
 
 
@@ -102,6 +119,10 @@ const columns = [
   {
     title: 'SpaceName',
     dataIndex: 'spaceName'
+  },
+  {
+    title: 'SpaceType',
+    dataIndex: 'spaceType'
   },
   {
     title: 'SpaceLevel',
@@ -132,7 +153,7 @@ const columns = [
 
 
 // 数据
-const dataList = ref([])
+const dataList = ref<API.Space[]>([])
 const total = ref(0)
 
 // 搜索条件

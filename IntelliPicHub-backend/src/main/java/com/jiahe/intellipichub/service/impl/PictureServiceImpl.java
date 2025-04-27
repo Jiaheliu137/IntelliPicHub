@@ -95,10 +95,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (spaceId != null) {
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "Space is not exist");
-            // 校验是否有空间的权限，仅空间所有者才能上传
-            if (!loginUser.getId().equals(space.getUserId())) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Only the space owner can upload pictures");
-            }
+            // 改为使用统一权限校验
+            //            // 校验是否有空间的权限，仅空间所有者才能上传
+//            if (!loginUser.getId().equals(space.getUserId())) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Only the space owner can upload pictures");
+//            }
             // 校验额度
             if (space.getTotalCount() >= space.getMaxCount()) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "The space has reached the maximum number of pictures");
@@ -119,10 +120,11 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
             Picture oldPicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "Picture is not exist");
 
+//            改为统一权限校验
             // 仅本人或者管理员可以编辑图片 
-            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Only the user himself or the administrator can edit the picture");
-            }
+//            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Only the user himself or the administrator can edit the picture");
+//            }
             // 校验空间是否一致
             // 没传spaceId，则复用原有图片的spaceId
             if (spaceId == null) {
@@ -613,7 +615,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验权限
-        this.checkPictureAuth(loginUser, oldPicture);
+        // 已改为使用注解鉴权
+//        this.checkPictureAuth(loginUser, oldPicture);
 
         // 开启事务
         transactionTemplate.execute(status -> {
@@ -703,9 +706,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         // 2. 校验空间权限
         Space space = spaceService.getById(spaceId);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "Space not exist");
-        if (!loginUser.getId().equals(space.getUserId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "No access permission to the space.");
-        }
+        // 改为统一权限校验
+//        if (!loginUser.getId().equals(space.getUserId())) {
+//            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "No access permission to the space.");
+//        }
         // 3. 查询指定图片（进选择需要的字段）
         List<Picture> pictureList = this.lambdaQuery()
                 .select(Picture::getId, Picture::getSpaceId)
@@ -745,7 +749,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR, "Picture not exist"));
         
         // 权限校验
-        checkPictureAuth(loginUser, picture);
+        // 已改为使用注解鉴权
+//        checkPictureAuth(loginUser, picture);
         
         // 构造请求参数
         CreateOutPaintingTaskRequest createOutPaintingTaskRequest = new CreateOutPaintingTaskRequest();
@@ -801,7 +806,8 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验权限
-        this.checkPictureAuth(loginUser, oldPicture);
+        // 已改为使用注解鉴权
+//        this.checkPictureAuth(loginUser, oldPicture);
 
         // 操作数据库
         boolean result = this.updateById(picture);

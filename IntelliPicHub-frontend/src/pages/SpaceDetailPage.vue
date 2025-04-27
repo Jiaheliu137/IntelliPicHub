@@ -3,7 +3,7 @@
     <!--    空间信息-->
     <a-flex justify="space-between" align="bottom">
       <a-flex align="center">
-        <h2>{{ space.spaceName }}</h2>
+        <h2>{{ space.spaceName }} ({{ SPACE_TYPE_MAP[space.spaceType] }})</h2>
         <a-space>
           <a-tag v-if="space.spaceLevel === 0" color="blue" class="space-level-tag">
             <star-outlined />
@@ -24,9 +24,39 @@
         </a-space>
       </a-flex>
       <a-space size="middle">
-        <a-button type="primary" @click="showUploadModal">+ Add Picture</a-button>
-        <a-button type="primary" ghost :icon="h(BarChartOutlined)" :href="`/space_analyze?spaceId=${id}`" target="_blank">Space Analyze</a-button>
-        <a-button :icon="h(EditOutlined)" @click="doBatchEdit">Batch Edit</a-button>
+        <a-button
+          v-if="canUploadPicture"
+          type="primary"
+          @click="showUploadModal"
+        >
+          + Add Picture
+        </a-button>
+        <a-button
+          v-if="canManageSpaceUser &&SPACE_TYPE_ENUM.TEAM==space.spaceType"
+          type="primary"
+          ghost
+          :icon="h(TeamOutlined)"
+          :href="`/spaceUserManage/${id}`"
+          target="_blank"
+        >
+          Member manage
+        </a-button>
+
+        <a-button
+          v-if="canManageSpaceUser"
+          type="primary"
+          ghost :icon="h(BarChartOutlined)"
+          :href="`/space_analyze?spaceId=${id}`" target="_blank"
+        >
+          Space Analyze
+        </a-button>
+        <a-button
+          v-if="canEditPicture"
+          :icon="h(EditOutlined)"
+          @click="doBatchEdit"
+        >
+          Batch Edit
+        </a-button>
         <a-tooltip
           :title="`Used Space ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
         >
@@ -51,7 +81,14 @@
 
 
     <!-- 图片列表 -->
-    <PictureList :dataList="dataList" :loading="loading" :showOp="true" :onReload="fetchData" />
+    <PictureList
+      :dataList="dataList"
+      :loading="loading"
+      :showOp="true"
+      :onReload="fetchData"
+      :canEdit="canEditPicture"
+      :canDelete="canDeletePicture"
+    />
     <a-pagination
       style="text-align: right"
       v-model:current="searchParams.current"
@@ -85,10 +122,10 @@
 import {
   BarChartOutlined,
   CrownOutlined, EditOutlined,
-  StarOutlined,
+  StarOutlined, TeamOutlined,
   TrophyOutlined
 } from '@ant-design/icons-vue'
-import { onMounted, ref, h } from 'vue'
+import { onMounted, ref, h, watch, computed } from 'vue'
 import {
   getSpaceVoByIdUsingGet
 
@@ -101,7 +138,7 @@ import {
 } from '@/api/pictureController.ts'
 import { formatSize } from '@/utils'
 import PictureList from '@/components/PictureList.vue'
-import { SPACE_LEVEL_MAP } from '@/constants/space.ts'
+import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '@/constants/space.ts'
 import PicturePopUpUploadModal from '@/components/PicturePopUpUploadModal.vue'
 import PictureSearchForm from '@/components/PictureSearchForm.vue'
 import { ColorPicker } from 'vue3-colorpicker'
@@ -134,6 +171,20 @@ const props = defineProps<{
 
 const space = ref<API.SpaceVO>({})
 
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+  return computed(() => {
+    return (space.value.permissionList ?? []).includes(permission)
+  })
+}
+
+// 定义权限检查
+const canManageSpaceUser = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_USER_MANAGE)
+const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_UPLOAD)
+const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+
+
 // ------------获取空间详情------------
 const fetchSpaceDetail = async () => {
   try {
@@ -149,6 +200,10 @@ const fetchSpaceDetail = async () => {
     message.error('Failed to get space information：' + e.message)
   }
 }
+
+onMounted(() => {
+  fetchSpaceDetail()
+})
 
 // ------------获取图片列表------------
 // 搜索条件
@@ -179,7 +234,7 @@ const fetchData = async () => {
     tags: [] as String[]
   }
   const res = await listPictureVoByPageUsingPost(params)
-  if (res.data.data) {
+  if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data.records ?? []
     total.value = res.data.data.total ?? 0
   } else {
@@ -188,7 +243,7 @@ const fetchData = async () => {
   loading.value = false
 }
 
-// 页面加载时请求一次
+// 页面加载时获取数据，请求一次
 onMounted(() => {
   fetchData()
 })
@@ -229,9 +284,18 @@ onMounted(() => {
   getTagCategoryOptions()
 })
 
-onMounted(() => {
-  fetchSpaceDetail()
-})
+
+
+watch(
+  () => props.id,
+  (newSpaceId) => {
+    fetchSpaceDetail()
+    fetchData()
+  },
+)
+
+
+
 
 // 图片上传相关
 const uploadModalVisible = ref(false)

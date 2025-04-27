@@ -108,4 +108,27 @@ CREATE INDEX idx_spaceId ON picture (spaceId);
 ALTER TABLE picture
     ADD COLUMN picColor varchar(16) null comment 'Main color tone of picture';
 
+-- Add space type
+ALTER TABLE space
+    ADD COLUMN spaceType int default 0 not null comment 'Space type：0-personal,1-group';
+
+CREATE INDEX idx_spaceType ON space (spaceType);
+
+-- Space-User Association Table
+create table if not exists space_user
+(
+    id         bigint auto_increment comment 'id' primary key,
+    spaceId    bigint                                 not null comment 'Space id',
+    userId     bigint                                 not null comment 'User id',
+    spaceRole  varchar(128) default 'viewer'          null comment 'Space role：viewer/editor/admin',
+    createTime datetime     default CURRENT_TIMESTAMP not null comment 'Create time',
+    updateTime datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment 'Update time',
+    -- 索引设计
+    UNIQUE KEY uk_spaceId_userId (spaceId, userId), -- 唯一索引，用户在一个空间中只能有一个角色
+    INDEX idx_spaceId (spaceId),                    -- 提升按空间查询的性能
+    INDEX idx_userId (userId)                       -- 提升按用户查询的性能
+) comment 'Space-User Association' collate = utf8mb4_unicode_ci;
+
+
+
 

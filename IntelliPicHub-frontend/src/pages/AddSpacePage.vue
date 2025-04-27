@@ -1,7 +1,7 @@
 <template>
   <div id="addSpacePage">
     <h2 style="margin-bottom: 16px">
-      {{ route.query?.id ? 'Edit space' : 'Create space' }}
+      {{ route.query?.id ? 'Edit' : 'Create' }} {{ SPACE_TYPE_MAP[spaceType] }}
     </h2>
 
     <!--    空间信息表单-->
@@ -30,7 +30,9 @@
 
 
       <a-form-item>
-        <a-button type="primary" html-type="submit" :loading="loading" style="width: 100%">{{ route.query?.id ? 'Edit' : 'Create' }}</a-button>
+        <a-button type="primary" html-type="submit" :loading="loading" style="width: 100%">
+          {{ route.query?.id ? 'Edit' : 'Create' }}
+        </a-button>
       </a-form-item>
     </a-form>
     <!--    空间级别介绍-->
@@ -50,7 +52,7 @@
 
 <script setup lang="ts">
 
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   addSpaceUsingPost,
@@ -60,7 +62,7 @@ import {
 } from '@/api/spaceController.ts'
 import { useRoute } from 'vue-router'
 import router from '@/router'
-import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS } from '@/constants/space.ts'
+import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '@/constants/space.ts'
 import { formatSize } from '../utils'
 
 
@@ -73,6 +75,15 @@ const route = useRoute()
 const oldSpace = ref<API.SpaceVO>()
 const loading = ref(false)
 const spaceLevelList = ref<API.SpaceLevel[]>([])
+// 空间类别,默认为私有空间
+// 空间类别
+const spaceType = computed(() => {
+  if (route.query?.type) {
+    return Number(route.query.type)
+  }
+  return SPACE_TYPE_ENUM.PRIVATE
+})
+
 
 /**
  * 获取空间详情用于编辑
@@ -104,7 +115,6 @@ const getOldSpace = async () => {
 }
 
 
-
 /**
  * 获取空间级别列表
  */
@@ -132,29 +142,30 @@ onMounted(() => {
  */
 const handleSubmit = async () => {
   const spaceId = oldSpace.value?.id
-  loading.value = true;
+  loading.value = true
   try {
     // 根据是否有ID判断是创建还是更新
     const id = route.query?.id
     let res
 
-    if (id) {
+    if (spaceId) {
 
       res = await updateSpaceUsingPost({
-        id: id, // 不转换为Number
-        ...spaceForm,
+        id: spaceId, // 不转换为Number
+        ...spaceForm
       })
     } else {
       // 创建空间
       res = await addSpaceUsingPost({
         ...spaceForm,
+        spaceType: spaceType.value
       })
     }
 
     // 操作成功
     if (res.data.code === 0 && res.data.data) {
       const spaceId = id || res.data.data
-      message.success(id ? "Edit successfully" : "Create successfully")
+      message.success(id ? 'Edit successfully' : 'Create successfully')
 
       // 检查是否是从管理页面来的编辑操作
       const fromAdmin = route.query?.fromAdmin === 'true'
@@ -164,7 +175,7 @@ const handleSubmit = async () => {
       } else {
         // 普通用户操作则跳转到空间详情页
         router.push({
-          path: `/space/${spaceId}`,
+          path: `/space/${spaceId}`
         })
       }
     } else {
@@ -173,7 +184,7 @@ const handleSubmit = async () => {
   } catch (_) {
     message.error((route.query?.id ? 'Edit' : 'Create') + ' failed')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 

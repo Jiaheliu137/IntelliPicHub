@@ -170,7 +170,7 @@ const handleSubmit = async (values: any) => {
     closeModal()
     props.onSuccess?.()
   } else {
-    message.error('Operation failed')
+    message.error('Operation failed '+ (res.data.message ?? ''))
   }
 }
 

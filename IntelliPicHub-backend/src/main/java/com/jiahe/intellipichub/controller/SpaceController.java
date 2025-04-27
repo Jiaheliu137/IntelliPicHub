@@ -1,5 +1,6 @@
 package com.jiahe.intellipichub.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jiahe.intellipichub.annotation.AuthCheck;
 import com.jiahe.intellipichub.common.BaseResponse;
@@ -9,12 +10,16 @@ import com.jiahe.intellipichub.constant.UserConstant;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.exception.ThrowUtils;
+import com.jiahe.intellipichub.manager.auth.SpaceUserAuthManager;
 import com.jiahe.intellipichub.model.dto.space.*;
 import com.jiahe.intellipichub.model.entity.Space;
+import com.jiahe.intellipichub.model.entity.SpaceUser;
 import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.enums.SpaceLevelEnum;
+import com.jiahe.intellipichub.model.enums.SpaceTypeEnum;
 import com.jiahe.intellipichub.model.vo.SpaceVO;
 import com.jiahe.intellipichub.service.SpaceService;
+import com.jiahe.intellipichub.service.SpaceUserService;
 import com.jiahe.intellipichub.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -39,6 +44,13 @@ public class SpaceController {
 
     @Resource
     private SpaceService spaceService;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
+
+    @Resource
+
+    private SpaceUserService spaceUserService;
 
     @PostMapping("/add")
     public BaseResponse<Long> addSpace(@RequestBody SpaceAddRequest spaceAddRequest, HttpServletRequest request) {
@@ -66,7 +78,14 @@ public class SpaceController {
 //        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
 //            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
 //        }
-        spaceService.checkSpaceAuth(loginUser,oldSpace);
+        spaceService.checkSpaceAuth(loginUser, oldSpace);
+
+        // 如果是团队空间，还要删除团队用户表中相关数据
+        if(oldSpace.getSpaceType().equals(SpaceTypeEnum.TEAM.getValue())){
+            spaceUserService.remove(new LambdaQueryWrapper<SpaceUser>()
+                    .eq(SpaceUser::getSpaceId, oldSpace.getId())
+            );
+        }
 
         // 操作数据库
         boolean result = spaceService.removeById(id);
@@ -129,8 +148,12 @@ public class SpaceController {
         // 查询数据库
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+        SpaceVO spaceVO=spaceService.getSpaceVO(space, request);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        spaceVO.setPermissionList(permissionList);
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        return ResultUtils.success(spaceVO);
     }
 
     /**
@@ -194,7 +217,7 @@ public class SpaceController {
 //        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
 //            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
 //        }
-        spaceService.checkSpaceAuth(loginUser,oldSpace);
+        spaceService.checkSpaceAuth(loginUser, oldSpace);
         // 操作数据库
         boolean result = spaceService.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -203,6 +226,7 @@ public class SpaceController {
 
     /**
      * 获取所欲空间级别列表，便于前端展示
+     *
      * @return
      */
     @GetMapping("/list/level")

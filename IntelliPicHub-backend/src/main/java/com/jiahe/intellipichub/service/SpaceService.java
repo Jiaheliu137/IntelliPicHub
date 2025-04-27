@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 public interface SpaceService extends IService<Space> {
 
     /**
-     * 创建控件
+     * 创建空间
      * @param spaceAddRequest
      * @param loginUser
      * @return
@@ -39,17 +39,10 @@ public interface SpaceService extends IService<Space> {
      * @param request
      * @return
      */
-
-    /**
-     *
-     * @param space
-     * @param request
-     * @return
-     */
     public SpaceVO getSpaceVO(Space space, HttpServletRequest request);
 
     /**
-     *
+     * 获取空间包装类，分页
      * @param spacePage
      * @param request
      * @return
@@ -63,9 +56,19 @@ public interface SpaceService extends IService<Space> {
      */
     public void fillSpaceBySpaceLevel(Space space);
 
+    /**
+     * 获取查询对象
+     * @param spaceQueryRequest
+     * @return
+     */
     public QueryWrapper<Space> getQueryWrapper(SpaceQueryRequest spaceQueryRequest);
 
 
+    /**
+     * 校验空间权限
+     * @param loginUser
+     * @param space
+     */
     void checkSpaceAuth(User loginUser, Space space);
 
 }

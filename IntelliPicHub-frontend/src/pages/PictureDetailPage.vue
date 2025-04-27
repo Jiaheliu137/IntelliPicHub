@@ -71,7 +71,7 @@
             <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
               Edit
             </a-button>
-            <a-button :icon="h(DeleteOutlined)" v-if="canEdit" danger @click="doDelete">
+            <a-button :icon="h(DeleteOutlined)" v-if="canDelete" danger @click="doDelete">
               Delete
             </a-button>
             <a-button
@@ -120,20 +120,33 @@ import { downloadImage, formatSize, toHexColor } from '../utils'
 import router from '@/router'
 import { PIC_REVIEW_STATUS_ENUM } from '@/constants/picture.ts'
 import ShareModal from '@/components/ShareModal.vue'
+import { SPACE_PERMISSION_ENUM } from '@/constants/space.ts'
 
 const loginUserStore = useLoginUserStore()
 
-// 是否具有编辑权限
-const canEdit = computed(() => {
-  const loginUser = loginUserStore.loginUser
-  // 未登录不可编辑
-  if (!loginUser.id) {
-    return false
-  }
-  // 仅本人或管理员可编辑
-  const user = picture.value.user || {}
-  return loginUser.id === user.id || loginUser.userRole === 'admin'
-})
+// 通用权限检查函数
+function createPermissionChecker(permission: string) {
+  return computed(() => {
+    return (picture.value.permissionList ?? []).includes(permission)
+  })
+}
+
+// 定义权限检查
+const canEdit = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
+const canDelete = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+
+
+// // 是否具有编辑权限
+// const canEdit = computed(() => {
+//   const loginUser = loginUserStore.loginUser
+//   // 未登录不可编辑
+//   if (!loginUser.id) {
+//     return false
+//   }
+//   // 仅本人或管理员可编辑
+//   const user = picture.value.user || {}
+//   return loginUser.id === user.id || loginUser.userRole === 'admin'
+// })
 
 // 是否是管理员
 const isAdmin = computed(() => {

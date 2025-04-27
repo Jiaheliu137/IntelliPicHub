@@ -1,6 +1,5 @@
 <template>
   <div class="pictureList">
-
     <!-- 图片列表 -->
     <a-list
       :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }"
@@ -32,11 +31,11 @@
                 <SearchOutlined />
                 <!--                Search-->
               </a-space>
-              <a-space @click="e => doEdit(picture,e)">
+              <a-space v-if="canEdit" @click="e => doEdit(picture,e)">
                 <EditOutlined />
                 <!--                Edit-->
               </a-space>
-              <a-space @click="e => doDelete(picture,e)">
+              <a-space v-if="canDelete" @click="e => doDelete(picture,e)">
                 <DeleteOutlined />
                 <!--                Delete-->
               </a-space>
@@ -79,12 +78,16 @@ interface Props {
   loading?: boolean
   showOp?: boolean
   onReload?: () => void
+  canEdit?: false,
+  canDelete?: false,
 }
 
 const props = withDefaults(defineProps<Props>(), {
   dataList: () => [],
   loading: false,
-  showOp: false
+  showOp: false,
+  canEdit: false,
+  canDelete: false,
 })
 
 const router = useRouter()

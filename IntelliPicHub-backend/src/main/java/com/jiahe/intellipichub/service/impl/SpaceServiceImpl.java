@@ -13,11 +13,15 @@ import com.jiahe.intellipichub.mapper.SpaceMapper;
 import com.jiahe.intellipichub.model.dto.space.SpaceAddRequest;
 import com.jiahe.intellipichub.model.dto.space.SpaceQueryRequest;
 import com.jiahe.intellipichub.model.entity.Space;
+import com.jiahe.intellipichub.model.entity.SpaceUser;
 import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.enums.SpaceLevelEnum;
+import com.jiahe.intellipichub.model.enums.SpaceRoleEnum;
+import com.jiahe.intellipichub.model.enums.SpaceTypeEnum;
 import com.jiahe.intellipichub.model.vo.SpaceVO;
 import com.jiahe.intellipichub.model.vo.UserVO;
 import com.jiahe.intellipichub.service.SpaceService;
+import com.jiahe.intellipichub.service.SpaceUserService;
 import com.jiahe.intellipichub.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -46,6 +50,13 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
     @Resource
     private TransactionTemplate transactionTemplate;
 
+    @Resource
+    private SpaceUserService spaceUserService;
+      // 为了方便部署，注释掉分库分表
+//    @Resource
+//    @Lazy
+//    private DynamicShardingManager dynamicShardingManager;
+
     /**
      * 用于存储用户级别的锁对象
      */
@@ -63,6 +74,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         if (spaceAddRequest.getSpaceLevel() == null) {
             space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
         }
+        if (spaceAddRequest.getSpaceType() == null) {
+            space.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
+        }
         // 填充容量和大小
         this.fillSpaceBySpaceLevel(space);
 
@@ -76,8 +90,9 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "No auth to create a space of the specified level.");
         }
 
-        // 4. 控制同一用户只能创建一个私有空间
+        // 4. 控制同一用户只能创建一个私有空间,以及一个团队空间
         // 使用ConcurrentHashMap存储锁对象，避免内存泄漏问题
+        // 为每个用户（userId）动态创建并管理一个唯一的锁对象
         Object lock = lockMap.computeIfAbsent(userId, key -> new Object());
         try {
             synchronized (lock) {
@@ -87,11 +102,25 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
                     // 判断是否已有空间，有的话则不能创建
                     boolean exists = this.lambdaQuery()
                             .eq(Space::getUserId, userId)
+                            .eq(Space::getSpaceType, space.getSpaceType())
                             .exists();
-                    ThrowUtils.throwIf(exists, ErrorCode.PARAMS_ERROR, "Every user can only create one private space");
+                    ThrowUtils.throwIf(exists, ErrorCode.PARAMS_ERROR, "Each user can create only one space per space type.");
                     // 创建
                     boolean result = this.save((space));
                     ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "Space creation failed");
+                    // 创建成功后，如果是团队空间，关联新增团队成员记录(space_user数据库)
+                    if(SpaceTypeEnum.TEAM.getValue()==space.getSpaceType()){
+                        SpaceUser spaceUser=new SpaceUser();
+                        spaceUser.setSpaceId(space.getId());
+                        spaceUser.setUserId(userId);
+                        spaceUser.setSpaceRole(SpaceRoleEnum.ADMIN.getValue());
+                        result = spaceUserService.save(spaceUser);
+                        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "Failed to create team member record");
+                    }
+                    // 创建图片分表，仅对团队空间生效
+                    // 为了方便部署，注释掉分库分表
+
+//                    dynamicShardingManager.createSpacePictureTable(space);
                     // 成功则返回新写入的id
                     return space.getId();
                 });
@@ -110,6 +139,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         String spaceName = space.getSpaceName();
         Integer spaceLevel = space.getSpaceLevel();
         SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(spaceLevel);
+        Integer spaceType= space.getSpaceType();
+        SpaceTypeEnum spaceTypeEnum = SpaceTypeEnum.getEnumByValue(spaceType);
         // 要创建时要校验的参数
         if (add) {
             if (StrUtil.isBlank(spaceName)) {
@@ -117,6 +148,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
             }
             if (spaceLevel == null) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "Space level cannot be empty");
+            }
+            if(spaceType==null){
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "Space type cannot be empty");
+
             }
         }
         // 修改数据时，如果要改空间级别
@@ -126,6 +161,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         // 修改数据时，如果要改空间名称
         if (StrUtil.isNotBlank(spaceName) && spaceName.length() > 30) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "Space name is too long");
+        }
+        // 修改数据时，如果要改空间类型
+        if (spaceType!=null&& spaceTypeEnum == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Space type is invalid");
         }
     }
 
@@ -205,6 +244,7 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         Integer spaceLevel = spaceQueryRequest.getSpaceLevel();
         String sortField = spaceQueryRequest.getSortField();
         String sortOrder = spaceQueryRequest.getSortOrder();
+        Integer spaceType = spaceQueryRequest.getSpaceType();
 
         // 拼接查询条件
 
@@ -212,6 +252,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         queryWrapper.eq(ObjUtil.isNotEmpty(userId), "userId", userId);
         queryWrapper.like(StrUtil.isNotBlank(spaceName), "spaceName", spaceName);
         queryWrapper.eq(ObjUtil.isNotEmpty(spaceLevel), "spaceLevel", spaceLevel);
+        queryWrapper.eq(ObjUtil.isNotEmpty(spaceType), "spaceType", spaceType);
+
 
 
         // 排序
