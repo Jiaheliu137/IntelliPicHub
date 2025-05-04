@@ -32,7 +32,12 @@
 
 
     <!-- 图片列表 -->
-    <PictureList :dataList="dataList" :loading="loading" />
+    <PictureList
+      :dataList="dataList"
+      :loading="loading"
+      :showOp="true"
+      :onReload="fetchData"
+    />
     <a-pagination
       style="text-align: right"
       v-model:current="searchParams.current"
@@ -44,6 +49,8 @@
     />
 
   </div>
+  <!-- 添加分享模态框组件 -->
+  <ShareModal ref="shareModalRef" :link="shareLink" title="分享图片" />
 </template>
 
 
@@ -53,12 +60,17 @@ import { onMounted, reactive, ref } from 'vue'
 import { listPictureTagCategoryUsingGet, listPictureVoByPageUsingPost } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue'
+import ShareModal from '@/components/ShareModal.vue'
 
 
 // 数据
 const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
 const loading = ref(true)
+
+// 分享功能
+const shareModalRef = ref()
+const shareLink = ref<string>('')
 
 // 搜索条件
 const searchParams = reactive<API.PictureQueryRequest>({
@@ -81,7 +93,7 @@ const fetchData = async () => {
   // 转换搜索参数
   const params = {
     ...searchParams,
-    tags: [] as String[]
+    tags: [] as string[]
   }
   if (selectedCategory.value !== 'all') {
     params.category = selectedCategory.value

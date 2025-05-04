@@ -23,25 +23,29 @@
               />
             </template>
             <template v-if="showOp" #actions>
-              <a-space @click="(e) => doShare(picture, e)">
-                <ShareAltOutlined />
-                <!--                Share-->
-              </a-space>
-              <a-space @click="(e) => doSearch(picture, e)">
-                <SearchOutlined />
-                <!--                Search-->
-              </a-space>
-              <a-space v-if="canEdit" @click="e => doEdit(picture,e)">
-                <EditOutlined />
-                <!--                Edit-->
-              </a-space>
-              <a-space v-if="canDelete" @click="e => doDelete(picture,e)">
-                <DeleteOutlined />
-                <!--                Delete-->
-              </a-space>
+              <a-tooltip title="Share">
+                <a-space @click="(e) => doShare(picture, e)">
+                  <ShareAltOutlined />
+                </a-space>
+              </a-tooltip>
+              <a-tooltip title="Search similar pictures">
+                <a-space @click="(e) => doSearch(picture, e)">
+                  <SearchOutlined />
+                </a-space>
+              </a-tooltip>
+              <a-tooltip title="Edit">
+                <a-space v-if="canEdit" @click="e => doEdit(picture,e)">
+                  <EditOutlined />
+                </a-space>
+              </a-tooltip>
+              <a-tooltip title="Delete">
+                <a-space v-if="canDelete" @click="e => doDelete(picture,e)">
+                  <DeleteOutlined />
+                </a-space>
+              </a-tooltip>
             </template>
             <div class="picture-overlay">
-              <h3 class="picture-title">{{ picture.name }}</h3>
+              <!-- <h3 class="picture-title">{{ picture.name }}</h3> -->
               <div class="picture-tags">
                 <a-tag color="green">
                   {{ picture.category ?? 'Other' }}
@@ -100,7 +104,7 @@ const doClickPicture = (picture: API.PictureVO) => {
   window.open(`/picture/${picture.id}`, '_blank')
 }
 
-const doSearch = (picture, e) => {
+const doSearch = (picture: API.PictureVO, e: MouseEvent) => {
   // 阻止冒泡
   e.stopPropagation()
   // 打开新的页面
@@ -109,7 +113,7 @@ const doSearch = (picture, e) => {
 
 // 编辑
 // e 是事件对象（Event Object）的简写它包含了事件的所有信息，比如：e.target - 触发事件的元素e.stopPropagation() - 阻止事件冒泡的方法e.preventDefault() - 阻止默认行为的
-const doEdit = (picture, e) => {
+const doEdit = (picture: API.PictureVO, e: MouseEvent) => {
   // 阻止冒泡
   e.stopPropagation()
   // 跳转时携带spaceId
@@ -123,7 +127,7 @@ const doEdit = (picture, e) => {
 }
 
 // 删除
-const doDelete = async (picture, e) => {
+const doDelete = async (picture: API.PictureVO, e: MouseEvent) => {
   // 阻止冒泡
   e.stopPropagation()
   const id = picture.id
@@ -146,7 +150,7 @@ const shareModalRef = ref()
 // 分享链接
 const shareLink = ref<string>('')
 // 分享函数
-const doShare = (picture, e) => {
+const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   // 阻止冒泡
   e.stopPropagation()
   shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id}`

@@ -59,6 +59,9 @@
         </a-button>
         <a-tooltip
           :title="`Used Space ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
+          placement="bottomLeft"
+          :mouseEnterDelay="0"
+          overlayClassName="space-usage-tooltip"
         >
           <a-progress
             type="circle"
@@ -362,5 +365,10 @@ h2 {
 
 .space-level-tag {
   margin-left: 10px;
+}
+
+:global(.space-usage-tooltip) {
+  position: fixed;
+  z-index: 1000;
 }
 </style>

@@ -27,3 +27,35 @@ export const PIC_REVIEW_STATUS_OPTIONS = Object.keys(PIC_REVIEW_STATUS_MAP).map(
 //     { label: 'Pass', value: '1' },
 //     { label: 'Reject', value: '2' }
 //   ]
+
+
+export const PICTURE_EDIT_MESSAGE_TYPE_ENUM = {
+  INFO: 'INFO',
+  ERROR: 'ERROR',
+  ENTER_EDIT: 'ENTER_EDIT',
+  EXIT_EDIT: 'EXIT_EDIT',
+  EDIT_ACTION: 'EDIT_ACTION',
+};
+
+
+export const PICTURE_EDIT_MESSAGE_TYPE_MAP = {
+  INFO: 'Send notification',
+  ERROR: 'Send error',
+  ENTER_EDIT: 'Enter edit status',
+  EXIT_EDIT: 'Exit edit status',
+  EDIT_ACTION: 'Execute edit action',
+};
+
+export const PICTURE_EDIT_ACTION_ENUM = {
+  ZOOM_IN: 'ZOOM_IN',
+  ZOOM_OUT: 'ZOOM_OUT',
+  ROTATE_LEFT: 'ROTATE_LEFT',
+  ROTATE_RIGHT: 'ROTATE_RIGHT',
+};
+
+export const PICTURE_EDIT_ACTION_MAP = {
+  ZOOM_IN: 'Zoom in',
+  ZOOM_OUT: 'Zoom out',
+  ROTATE_LEFT: 'Rotate left',
+  ROTATE_RIGHT: 'Rotate right',
+};
