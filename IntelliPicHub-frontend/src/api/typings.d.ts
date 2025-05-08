@@ -732,4 +732,8 @@ declare namespace API {
     userProfile?: string
     userRole?: string
   }
+
+  type VipExchangeRequest = {
+    vipCode?: string
+  }
 }

@@ -183,6 +183,31 @@ public class UserController {
         userVOPage.setRecords(userVOList);
         return ResultUtils.success(userVOPage);
     }
+
+    /**
+     * 用户兑换VIP会员
+     *
+     * @param vipExchangeRequest VIP兑换请求
+     * @param request HTTP请求
+     * @return 兑换结果
+     */
+    @PostMapping("/exchange/vip")
+    public BaseResponse<Boolean> exchangeVip(@RequestBody VipExchangeRequest vipExchangeRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(vipExchangeRequest == null, ErrorCode.PARAMS_ERROR);
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 获取兑换码
+        String vipCode = vipExchangeRequest.getVipCode();
+        ThrowUtils.throwIf(vipCode == null || vipCode.isEmpty(), ErrorCode.PARAMS_ERROR, "VIP兑换码不能为空");
+        
+        // 调用Service层的兑换方法
+        boolean result = userService.exchangeVip(loginUser, vipCode);
+        
+        return ResultUtils.success(result);
+    }
+    
 }
 
 

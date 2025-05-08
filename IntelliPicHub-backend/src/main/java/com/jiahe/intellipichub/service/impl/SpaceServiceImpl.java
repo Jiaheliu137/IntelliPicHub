@@ -68,13 +68,13 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         // 转换实体类和DTO
         Space space = new Space();
         BeanUtils.copyProperties(spaceAddRequest, space);
-        if (StrUtil.isBlank(spaceAddRequest.getSpaceName())) {
+        if (StrUtil.isBlank(space.getSpaceName())) {
             space.setSpaceName("Basic space");
         }
-        if (spaceAddRequest.getSpaceLevel() == null) {
+        if (space.getSpaceLevel() == null) {
             space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
         }
-        if (spaceAddRequest.getSpaceType() == null) {
+        if (space.getSpaceType() == null) {
             space.setSpaceType(SpaceTypeEnum.PRIVATE.getValue());
         }
         // 填充容量和大小

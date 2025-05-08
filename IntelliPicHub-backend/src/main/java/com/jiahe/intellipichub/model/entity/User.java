@@ -82,7 +82,7 @@ public class User implements Serializable {
     private String vipCode;
 
     /**
-     * VIP Number
+     * VIP Number，会员编号
      */
     private Long vipNumber;
 

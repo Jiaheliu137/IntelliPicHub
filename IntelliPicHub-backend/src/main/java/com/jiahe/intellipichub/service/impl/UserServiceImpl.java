@@ -1,8 +1,13 @@
 package com.jiahe.intellipichub.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateField;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiahe.intellipichub.constant.UserConstant;
@@ -23,6 +28,7 @@ import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -196,6 +202,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public boolean isAdmin(User user) {
         return user!=null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
+
+    // region --用户会员兑换功能--
+    /**
+     * 兑换会员
+     * @param user
+     * @param vipCode
+     * @return
+     */
+    @Override
+    public boolean exchangeVip(User user, String vipCode) {
+        // 使用工具类检查VIP兑换码是否有效
+        if (!com.jiahe.intellipichub.utils.VipCodeUtil.isValidVipCode(vipCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Invalid vip code or vip code has been used");
+        }
+        
+        // 标记VIP兑换码为已使用
+        boolean markResult = com.jiahe.intellipichub.utils.VipCodeUtil.markVipCodeAsUsed(vipCode);
+        if (!markResult) {
+            log.warn("标记VIP兑换码为已使用失败，但会继续处理会员开通逻辑: {}", vipCode);
+        }
+        
+        // 修改数据库用户表，给当前登录用户开通一年会员
+        // 1. 查询VIP会员数量，生成递增的会员编号
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.isNotNull("vipNumber");
+        long vipCount = this.count(queryWrapper);
+        long vipNumber = vipCount + 1; // 会员编号递增
+        
+        // 2. 更新用户信息
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setUserRole(UserRoleEnum.VIP.getValue());
+        updateUser.setVipCode(vipCode);
+        updateUser.setVipNumber(vipNumber);
+        
+        // 使用Hutool的DateUtil计算会员到期时间：当前时间加一年
+        Date vipExpireTime = DateUtil.offset(new Date(), DateField.YEAR, 1);
+        updateUser.setVipExpireTime(vipExpireTime);
+        
+        boolean result = this.updateById(updateUser);
+        return result;
+    }
+
+    // endregion --用户会员兑换功能--
 
 
     /**

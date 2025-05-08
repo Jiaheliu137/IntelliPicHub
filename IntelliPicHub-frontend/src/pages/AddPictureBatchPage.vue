@@ -1,5 +1,5 @@
 <template>
-  <div id="addPictureBathch">
+  <div id="addPictureBatch">
     <h2 style="margin-bottom: 16px">
       Create pictures in batches
     </h2>

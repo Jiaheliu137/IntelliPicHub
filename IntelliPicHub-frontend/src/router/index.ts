@@ -7,7 +7,7 @@ import ACCESS_ENUM from '@/access/accessEnum.ts'
 import AddPicturePage from '@/pages/AddPicturePage.vue'
 import PictureManagePage from '@/pages/admin/PictureManagePage.vue'
 import PictureDetailPage from '@/pages/PictureDetailPage.vue'
-import AddPictureBatch from '@/pages/AddPictureBatch.vue'
+import AddPictureBatchPage from '@/pages/AddPictureBatchPage.vue'
 import AddSpacePage from '@/pages/AddSpacePage.vue'
 import MySpacePage from '@/pages/MySpacePage.vue'
 import SpaceDetailPage from '@/pages/SpaceDetailPage.vue'
@@ -15,6 +15,7 @@ import SearchByPicturePage from '@/pages/SearchByPicturePage.vue'
 import SpaceAnalyzePage from '@/pages/SpaceAnalyzePage.vue'
 import SpaceUserManagePage from '@/pages/admin/SpaceUserManagePage.vue'
 import SpaceManagePage from '@/pages/admin/SpaceManagePage.vue'
+import VipExchangePage from '@/pages/VipExchangePage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -138,9 +139,17 @@ const router = createRouter({
     {
       path: '/add_picture/batch',
       name: 'Add picture  in batches ',
-      component: AddPictureBatch,
+      component: AddPictureBatchPage,
       meta: {
         access: ACCESS_ENUM.ADMIN,
+        hideInMenu: false
+      }
+    },
+    {
+      path: '/vip/exchange',
+      name: 'VIP Exchange',
+      component: VipExchangePage,
+      meta: {
         hideInMenu: false
       }
     },

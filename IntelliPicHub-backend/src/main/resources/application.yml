@@ -5,7 +5,7 @@ server:
 
 spring:
   application:
-    name: jiahe-IntelliPicHub
+    name: IntelliPicHub-backend
     # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

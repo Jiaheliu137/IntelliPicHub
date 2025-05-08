@@ -88,4 +88,12 @@ public interface UserService extends IService<User> {
 
     boolean isAdmin(User user);
 
+    /**
+     * 用户会员码兑换会员
+     * @param user
+     * @param vipCode
+     * @return
+     */
+    boolean exchangeVip(User user,String vipCode);
+
 }
