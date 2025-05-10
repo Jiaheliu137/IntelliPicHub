@@ -87,7 +87,7 @@ public class GetImagePageUrlApi {
     public static void main(String[] args) {
         try {
             // 测试图片URL
-            String testImageUrl = "https://jiahe-intellipichub-1352763103.cos.ap-hongkong.myqcloud.com/space/null/2025-04-17_mySLQZJn6wA8tlyf.jpg";
+            String testImageUrl = "https://jiahe-intellipichub-1352763103.cos.ap-hongkong.myqcloud.com/public/1920912817099210753/20250509100706252-jyNdiBmh_thumbnail.png";
             
             System.out.println("Starting test for getting image search URL...");
             System.out.println("Test image URL: " + testImageUrl);

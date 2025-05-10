@@ -1,23 +1,29 @@
 package com.jiahe.intellipichub.api.imagesearch.sub;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.jiahe.intellipichub.api.imagesearch.model.ImageSearchResult;
 import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
-import cn.hutool.json.JSONArray;
 
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class GetImageListApi {
 
+    /**
+     * 从HTML中提取cbirSimilar部分的正则表达式
+     */
+    private static final Pattern CBIR_SIMILAR_PATTERN = Pattern.compile("\"cbirSimilar\":\\s*\\{\\s*\"thumbs\":\\s*(\\[.*?\\])");
+    
     /**
      * 获取图片列表
      *
@@ -53,43 +59,51 @@ public class GetImageListApi {
         List<ImageSearchResult> results = new ArrayList<>();
         
         try {
-            // 查找所有包含图片信息的元素，使用完整的class选择器
-            Elements serpItems = document.select("div.serp-item.serp-item_type_search.serp-item_group_search");
-            log.info("找到 {} 个图片项目", serpItems.size());
+            // 获取完整的HTML内容
+            String html = document.outerHtml();
             
-            for (Element item : serpItems) {
-                try {
+            // 处理HTML中的转义字符
+            String htmlDecoded = html.replace("&quot;", "\"").replace("&amp;", "&");
+            
+            // 使用正则表达式提取cbirSimilar部分
+            Matcher thumbsMatch = CBIR_SIMILAR_PATTERN.matcher(htmlDecoded);
+            
+            if (!thumbsMatch.find()) {
+                log.warn("未找到cbirSimilar数据");
+                return results;
+            }
+            
+            // 提取JSON字符串并处理可能的转义字符
+            String thumbsJson = thumbsMatch.group(1).replace("\\", "");
+            
+            try {
+                // 解析JSON数据
+                JSONArray thumbsList = JSONUtil.parseArray(thumbsJson);
+                log.info("从cbirSimilar中找到 {} 个图片", thumbsList.size());
+                
+                for (int i = 0; i < thumbsList.size(); i++) {
+                    JSONObject item = thumbsList.getJSONObject(i);
                     ImageSearchResult result = new ImageSearchResult();
                     
-                    // 1. 从data-bem属性中提取缩略图URL
-                    String dataBem = item.attr("data-bem");
-                    if (dataBem != null && !dataBem.isEmpty()) {
-                        JSONObject jsonObject = JSONUtil.parseObj(dataBem);
-                        JSONObject serpItem = jsonObject.getJSONObject("serp-item");
-                        JSONArray preview = serpItem.getJSONArray("preview");
-                        if (preview != null && !preview.isEmpty()) {
-                            // 获取preview列表中第一个元素的url
-                            String thumbUrl = preview.getJSONObject(0).getStr("url", "");
-                            result.setThumbUrl(thumbUrl);
-                        }
+                    // 获取缩略图URL
+                    String thumbnailUrl = item.getStr("imageUrl", "");
+                    if (thumbnailUrl.startsWith("//")) {
+                        thumbnailUrl = "https:" + thumbnailUrl;
                     }
+                    result.setThumbUrl(thumbnailUrl);
                     
-                    // 2. 从a标签的href属性中提取原图URL
-                    Element linkElement = item.select("a").first();
-                    if (linkElement != null) {
-                        String href = linkElement.attr("href");
-                        // 查找img_url参数
-                        int imgUrlIndex = href.indexOf("img_url=");
-                        if (imgUrlIndex != -1) {
-                            String encodedUrl = href.substring(imgUrlIndex + 8); // 8 是 "img_url=" 的长度
-                            // 如果URL中还有其他参数，截取到第一个&符号
-                            int andIndex = encodedUrl.indexOf('&');
-                            if (andIndex != -1) {
-                                encodedUrl = encodedUrl.substring(0, andIndex);
-                            }
+                    // 从linkUrl提取原图URL
+                    String linkUrl = item.getStr("linkUrl", "");
+                    if (!linkUrl.isEmpty()) {
+                        // 提取原图URL的img_url参数
+                        Pattern imgUrlPattern = Pattern.compile("img_url=([^&]+)");
+                        Matcher imgUrlMatcher = imgUrlPattern.matcher(linkUrl);
+                        
+                        if (imgUrlMatcher.find()) {
+                            String encodedUrl = imgUrlMatcher.group(1);
                             // URL解码
-                            String fromUrl = java.net.URLDecoder.decode(encodedUrl, "UTF-8");
-                            result.setFromUrl(fromUrl);
+                            String originalUrl = URLDecoder.decode(encodedUrl, "UTF-8");
+                            result.setFromUrl(originalUrl);
                         }
                     }
                     
@@ -97,11 +111,10 @@ public class GetImageListApi {
                     if (!result.getThumbUrl().isEmpty() || !result.getFromUrl().isEmpty()) {
                         results.add(result);
                     }
-                    
-                } catch (Exception e) {
-                    log.warn("解析图片项目失败: {}", e.getMessage());
-                    continue;
                 }
+                
+            } catch (Exception e) {
+                log.error("解析JSON数据失败: {}", e.getMessage());
             }
             
             log.info("成功提取 {} 个图片结果", results.size());
