@@ -33,13 +33,13 @@
                   <SearchOutlined />
                 </a-space>
               </a-tooltip>
-              <a-tooltip title="Edit">
-                <a-space v-if="canEdit" @click="e => doEdit(picture,e)">
+              <a-tooltip title="Edit" v-if="canEdit">
+                <a-space  @click="e => doEdit(picture,e)">
                   <EditOutlined />
                 </a-space>
               </a-tooltip>
-              <a-tooltip title="Delete">
-                <a-space v-if="canDelete" @click="e => doDelete(picture,e)">
+              <a-tooltip title="Delete" v-if="canDelete">
+                <a-space  @click="e => doDelete(picture,e)">
                   <DeleteOutlined />
                 </a-space>
               </a-tooltip>
