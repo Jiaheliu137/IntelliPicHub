@@ -16,23 +16,35 @@ public class GetImageListApi_bing {
         List<ImageSearchResult> results = new ArrayList<>();
 
         try (Playwright playwright = Playwright.create()) {
+            // 启动浏览器
             Browser browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions().setHeadless(true)
+                new BrowserType.LaunchOptions().setHeadless(true)
             );
 
-            BrowserContext context = browser.newContext();
+            // 设置大视口以便加载更多内容
+            BrowserContext context = browser.newContext(
+                new Browser.NewContextOptions().setViewportSize(1920, 3000)
+            );
             Page page = context.newPage();
 
+            // 打开搜索页面
             page.navigate(searchUrl);
             page.waitForSelector("a.richImgLnk");
 
-            // 保存页面调试用（等价于 selenium 的 pageSource）
+            // 模拟滚动页面加载更多图片
+            for (int i = 0; i < 5; i++) {
+                page.evaluate("window.scrollBy(0, 1500);");
+                Thread.sleep(1000);  // 可根据实际延迟微调
+            }
+
+            // 保存调试页面
             try (FileWriter writer = new FileWriter("bing_debug_playwright.html")) {
                 writer.write(page.content());
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
+            // 解析图片信息
             List<ElementHandle> imageLinks = page.querySelectorAll("a.richImgLnk");
 
             for (ElementHandle link : imageLinks) {
@@ -61,7 +73,7 @@ public class GetImageListApi_bing {
     }
 
     public static void main(String[] args) {
-        String imageUrl = "https://jiahe-intellipichub-1352763103.cos.ap-hongkong.myqcloud.com/public/1912515518735192066/2025-04-17_FHYH4M3mZXNjwQFI_thumbnail.png";
+        String imageUrl = "https://jiahe-intellipichub-1352763103.cos.ap-hongkong.myqcloud.com/public/1920912817099210753/20250509100706252-jyNdiBmh.webp";
         String searchUrl = GetImagePageUrlApi_bing.getImagePageUrl(imageUrl);
         List<ImageSearchResult> results = getImageList(searchUrl);
 
