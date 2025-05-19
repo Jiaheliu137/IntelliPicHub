@@ -128,30 +128,38 @@
             <version>3.4.2</version>
         </dependency>
 
-        <!-- Selenium -->
+<!--        &lt;!&ndash; Selenium &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.seleniumhq.selenium</groupId>-->
+<!--            <artifactId>selenium-java</artifactId>-->
+<!--            <version>4.21.0</version>-->
+<!--        </dependency>-->
+
+<!--        &lt;!&ndash; WebDriver Manager 自动下载 ChromeDriver &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>io.github.bonigarcia</groupId>-->
+<!--            <artifactId>webdrivermanager</artifactId>-->
+<!--            <version>5.8.0</version>-->
+<!--        </dependency>-->
+<!--        &lt;!&ndash; 添加 Apache HttpClient 5 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.httpcomponents.client5</groupId>-->
+<!--            <artifactId>httpclient5</artifactId>-->
+<!--            <version>5.3.1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.google.guava</groupId>-->
+<!--            <artifactId>guava</artifactId>-->
+<!--            <version>31.1-jre</version>-->
+<!--        </dependency>-->
+
+<!--        playwrite-->
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>4.21.0</version>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.42.0</version>
         </dependency>
 
-        <!-- WebDriver Manager 自动下载 ChromeDriver -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>5.8.0</version>
-        </dependency>
-        <!-- 添加 Apache HttpClient 5 -->
-        <dependency>
-            <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>31.1-jre</version>
-        </dependency>
 
 
 

@@ -3,18 +3,10 @@ package com.jiahe.intellipichub.api.imagesearch.sub.bing;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.jiahe.intellipichub.api.imagesearch.model.ImageSearchResult;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import com.microsoft.playwright.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,51 +15,46 @@ public class GetImageListApi_bing {
     public static List<ImageSearchResult> getImageList(String searchUrl) {
         List<ImageSearchResult> results = new ArrayList<>();
 
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--disable-gpu");
-        options.addArguments("--remote-allow-origins=*");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36");
-        // 无头模式可能触发反爬虫
-        options.addArguments("--headless=new");
+        try (Playwright playwright = Playwright.create()) {
+            Browser browser = playwright.chromium().launch(
+                    new BrowserType.LaunchOptions().setHeadless(true)
+            );
 
-        WebDriverManager.chromedriver().setup();
-        WebDriver driver = new ChromeDriver(options);
+            BrowserContext context = browser.newContext();
+            Page page = context.newPage();
 
-        try {
-            driver.get(searchUrl);
+            page.navigate(searchUrl);
+            page.waitForSelector("a.richImgLnk");
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-            wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("a.richImgLnk")));
-
-            try (FileWriter writer = new FileWriter("bing_debug.html")) {
-                writer.write(driver.getPageSource());
+            // 保存页面调试用（等价于 selenium 的 pageSource）
+            try (FileWriter writer = new FileWriter("bing_debug_playwright.html")) {
+                writer.write(page.content());
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            List<WebElement> aTags = driver.findElements(By.cssSelector("a.richImgLnk"));
+            List<ElementHandle> imageLinks = page.querySelectorAll("a.richImgLnk");
 
-            for (WebElement aTag : aTags) {
-                String dataM = aTag.getAttribute("data-m");
-                try {
-                    WebElement img = aTag.findElement(By.tagName("img"));
-                    if (dataM != null && img != null) {
-                        JSONObject json = JSONUtil.parseObj(dataM);
-                        String murl = json.getStr("murl");
-                        String thumb = img.getAttribute("src");
-                        ImageSearchResult result = new ImageSearchResult();
-                        result.setFromUrl(murl);
-                        result.setThumbUrl(thumb);
-                        results.add(result);
-                    }
-                } catch (Exception ignored) {}
+            for (ElementHandle link : imageLinks) {
+                String dataM = link.getAttribute("data-m");
+                ElementHandle img = link.querySelector("img");
+
+                if (dataM != null && img != null) {
+                    String thumbUrl = img.getAttribute("src");
+
+                    JSONObject json = JSONUtil.parseObj(dataM);
+                    String murl = json.getStr("murl");
+
+                    ImageSearchResult result = new ImageSearchResult();
+                    result.setFromUrl(murl);
+                    result.setThumbUrl(thumbUrl);
+                    results.add(result);
+                }
             }
+
+            browser.close();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            driver.quit();
         }
 
         return results;
