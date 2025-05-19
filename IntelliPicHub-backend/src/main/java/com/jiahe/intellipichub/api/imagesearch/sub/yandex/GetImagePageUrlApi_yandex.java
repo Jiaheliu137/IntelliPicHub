@@ -1,4 +1,4 @@
-package com.jiahe.intellipichub.api.imagesearch.sub;
+package com.jiahe.intellipichub.api.imagesearch.sub.yandex;
 
 import cn.hutool.core.util.URLUtil;
 import com.jiahe.intellipichub.exception.BusinessException;
@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class GetImagePageUrlApi {
+public class GetImagePageUrlApi_yandex {
 
     /**
      * 从HTML中提取serpid的正则表达式

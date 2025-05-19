@@ -1,4 +1,4 @@
-package com.jiahe.intellipichub.api.imagesearch.sub;
+package com.jiahe.intellipichub.api.imagesearch.sub.yandex;
 
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
-public class GetImageListApi {
+public class GetImageListApi_yandex {
 
     /**
      * 从HTML中提取cbirSimilar部分的正则表达式
@@ -130,7 +130,7 @@ public class GetImageListApi {
         try {
             // 首先获取搜索结果页面URL
             String imageUrl = "https://jiahe-intellipichub-1352763103.cos.ap-hongkong.myqcloud.com/public/1912515518735192066/2025-04-16_tBtae0quoZ5C4pTd.webp";
-            String searchResultUrl = GetImagePageUrlApi.getImagePageUrl(imageUrl);
+            String searchResultUrl = GetImagePageUrlApi_yandex.getImagePageUrl(imageUrl);
             
             System.out.println("Getting image list from: " + searchResultUrl);
             
