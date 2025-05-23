@@ -296,7 +296,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
         user.setUserName(userAccount);
-        user.setUserRole(UserRoleEnum.USER.getValue());
+        
+        // 检查是否存在用户，如果不存在则设为管理员
+        boolean hasUser = this.baseMapper.exists(null);
+        if (!hasUser) {
+            user.setUserRole(UserRoleEnum.ADMIN.getValue());
+        } else {
+            user.setUserRole(UserRoleEnum.USER.getValue());
+        }
+        
         boolean saveResult = this.save(user);
         if (!saveResult) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, " Request failed,database operation failed");

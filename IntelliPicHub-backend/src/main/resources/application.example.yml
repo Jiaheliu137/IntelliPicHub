@@ -20,7 +20,7 @@ spring:
         driver-class-name: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://localhost:3306/intellipichub
         username: root
-        # 必填
+        # 必填 | Field cannot be empty 
         password: your_mysql_password
     rules:
       sharding:
@@ -46,7 +46,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/intellipichub
     username: root
-    # 必填
+    # 必填 | Field cannot be empty
     password: your_mysql_password
   # Redis 配置 | Redis configuration
   session:
@@ -56,7 +56,7 @@ spring:
   redis:
     database: 0
     host: 127.0.0.1
-    # 必填
+    # 必填 | Field cannot be empty | 
     password: your_redis_password
     port: 6379
     timeout: 5000
@@ -83,10 +83,10 @@ knife4j:
   enable: true
   # 开启认证 | Enable authentication
   basic:
-    # 必填
+    # 必填 | Field cannot be empty
     enable: true
     username: admin
-    # 必填
+    # 必填 | Field cannot be empty
     password: your_password
   openapi:
     title: interface doc
@@ -98,7 +98,7 @@ knife4j:
           - com.jiahe.intellipichub.controller
 
 # 腾讯云 COS 配置 | Tencent Cloud COS configuration
-# 必填
+# 必填 | Field cannot be empty
 cos:
   client:
     host: your_cos_host
