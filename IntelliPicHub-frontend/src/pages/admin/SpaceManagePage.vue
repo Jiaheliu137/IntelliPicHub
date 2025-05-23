@@ -237,20 +237,20 @@ const doDelete = async (id: number) => {
     return
   }
 
-  try {
-    const res = await deleteSpaceUsingPost({
-      id
-    })
-    if (res.data.code === 0) {
-      message.success('Delete successfully')
-      // 重新加载数据
-      fetchData()
-    } else {
-      message.error('Delete failed: ' + res.data.message)
-    }
-  } catch (error) {
-    console.error('Delete space failed:', error)
-    message.error('Delete space failed, please try again later')
+    try {
+      const res = await deleteSpaceUsingPost({
+        id
+      })
+      if (res.data.code === 0) {
+        message.success('Delete successfully')
+        // 重新加载数据
+        fetchData()
+      } else {
+        message.error('Delete failed: ' + res.data.message)
+      }
+    } catch (error) {
+      console.error('Delete space failed:', error)
+      message.error('Delete space failed, please try again later')
   }
 }
 

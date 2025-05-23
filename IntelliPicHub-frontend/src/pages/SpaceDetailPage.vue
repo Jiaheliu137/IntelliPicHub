@@ -226,19 +226,19 @@ const fetchData = async () => {
   }
 
   try {
-    const res = await listPictureVoByPageUsingPost(params)
-    if (res.data.code === 0 && res.data.data) {
-      dataList.value = res.data.data.records ?? []
-      total.value = res.data.data.total ?? 0
-    } else {
-      message.error('Failed to get data，' + res.data.message)
-    }
+  const res = await listPictureVoByPageUsingPost(params)
+  if (res.data.code === 0 && res.data.data) {
+    dataList.value = res.data.data.records ?? []
+    total.value = res.data.data.total ?? 0
+  } else {
+    message.error('Failed to get data，' + res.data.message)
+  }
   } catch (error) {
     console.error('Failed to fetch space data:', error)
     message.error('Failed to get data')
   } finally {
-    loading.value = false
-  }
+  loading.value = false
+}
 }
 
 // 获取标签和分类选项

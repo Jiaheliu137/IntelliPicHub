@@ -115,19 +115,19 @@ const fetchData = async () => {
   })
 
   try {
-    const res = await listPictureVoByPageUsingPost(params)
-    if (res.data.data) {
-      dataList.value = res.data.data.records ?? []
-      total.value = res.data.data.total ?? 0
-    } else {
-      message.error('Failed to get data，' + res.data.message)
-    }
+  const res = await listPictureVoByPageUsingPost(params)
+  if (res.data.data) {
+    dataList.value = res.data.data.records ?? []
+    total.value = res.data.data.total ?? 0
+  } else {
+    message.error('Failed to get data，' + res.data.message)
+  }
   } catch (error) {
     console.error('Failed to fetch data:', error)
     message.error('Failed to get data')
   } finally {
-    loading.value = false
-  }
+  loading.value = false
+}
 }
 
 const doSearch = () => {
@@ -139,15 +139,15 @@ const doSearch = () => {
 // 获取标签和分类选项
 const getTagCategoryOptions = async () => {
   try {
-    const res = await listPictureTagCategoryUsingGet()
-    if (res.data.code === 0 && res.data.data) {
-      // 转换成下拉选项组件接受的格式
-      categoryList.value = res.data.data.categoryList ?? []
-      tagList.value = res.data.data.tagList ?? []
-      // 初始化标签选择状态
-      selectedTagList.value = new Array(tagList.value.length).fill(false)
-    } else {
-      message.error('Fail to load category and tags，' + res.data.message)
+  const res = await listPictureTagCategoryUsingGet()
+  if (res.data.code === 0 && res.data.data) {
+    // 转换成下拉选项组件接受的格式
+    categoryList.value = res.data.data.categoryList ?? []
+    tagList.value = res.data.data.tagList ?? []
+    // 初始化标签选择状态
+    selectedTagList.value = new Array(tagList.value.length).fill(false)
+  } else {
+    message.error('Fail to load category and tags，' + res.data.message)
     }
   } catch (error) {
     console.error('Failed to get tag/category options:', error)

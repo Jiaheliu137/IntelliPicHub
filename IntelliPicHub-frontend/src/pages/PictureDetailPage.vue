@@ -8,104 +8,104 @@
       }"
     >
       <div class="content-overlay">
-        <!--    列的横向和竖向间距都是16-->
-        <a-row :gutter="[16, 16]">
-          <!-- 图片展示区 -->
-          <a-col :sm="24" :md="16" :xl="18">
+    <!--    列的横向和竖向间距都是16-->
+    <a-row :gutter="[16, 16]">
+      <!-- 图片展示区 -->
+      <a-col :sm="24" :md="16" :xl="18">
             <a-card :bordered="false">
-              <a-image
-                style="max-height: 600px; object-fit: contain"
-                :src="picture.url"
-              />
-            </a-card>
-          </a-col>
-          <!-- 图片信息区 -->
-          <a-col :sm="24" :md="8" :xl="6">
+          <a-image
+            style="max-height: 600px; object-fit: contain"
+            :src="picture.url"
+          />
+        </a-card>
+      </a-col>
+      <!-- 图片信息区 -->
+      <a-col :sm="24" :md="8" :xl="6">
             <a-card :bordered="false">
-              <a-descriptions :column="1">
+          <a-descriptions :column="1">
                 <a-descriptions-item>
-                  <a-space>
-                    <a-avatar :size="24" :src="picture.user?.userAvatar" />
-                    <div>{{ picture.user?.userName }}</div>
-                  </a-space>
-                </a-descriptions-item>
-                <a-descriptions-item label="Name">
-                  {{ picture.name ?? 'unnamed' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Introduction">
-                  {{ picture.introduction ?? '-' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Category">
-                  {{ picture.category ?? 'Default' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Tags">
-                  <a-tag v-for="tag in picture.tags" :key="tag">
-                    {{ tag }}
-                  </a-tag>
-                </a-descriptions-item>
-                <a-descriptions-item label="Format">
-                  {{ picture.picFormat ?? '-' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Width">
-                  {{ picture.picWidth ?? '-' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Height">
-                  {{ picture.picHeight ?? '-' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Ratio">
-                  {{ picture.picScale ?? '-' }}
-                </a-descriptions-item>
-                <a-descriptions-item label="Size">
-                  {{ formatSize(picture.picSize) }}
-                </a-descriptions-item>
-                <!-- <a-descriptions-item label="Color tone">
-                  <a-space>
-                    {{ picture.picColor ?? '-' }}
-                    <div :style="{
-                      width: '24px',
-                      height: '18px',
-                      backgroundColor: picture.picColor ? toHexColor(picture.picColor) : 'transparent'
-                    }"
-                    >
-                  </div>
-                  </a-space>
-                </a-descriptions-item> -->
-              </a-descriptions>
-              <!--          图片操作-->
-              <a-space wrap>
-                <a-button :icon="h(ShareAltOutlined)"  type="primary" ghost @click="doShare">
-                  Share
-                </a-button>
-                <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
-                  Edit
-                </a-button>
-                <a-button :icon="h(DeleteOutlined)" v-if="canDelete" danger @click="doDelete">
-                  Delete
-                </a-button>
-                <a-button
-                  v-if="isAdmin"
-                  type="primary"
-                  @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
-                >
-                  Pass
-                </a-button>
-                <a-button
-                  v-if="isAdmin"
-                  danger
-                  @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
-                >
-                  Reject
-                </a-button>
-                <a-button type="primary" @click="doDownload">
-                  Download Original
-                  <template #icon>
-                    <DownloadOutlined />
-                  </template>
-                </a-button>
+              <a-space>
+                <a-avatar :size="24" :src="picture.user?.userAvatar" />
+                <div>{{ picture.user?.userName }}</div>
               </a-space>
-            </a-card>
-          </a-col>
-        </a-row>
+            </a-descriptions-item>
+            <a-descriptions-item label="Name">
+              {{ picture.name ?? 'unnamed' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Introduction">
+              {{ picture.introduction ?? '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Category">
+              {{ picture.category ?? 'Default' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Tags">
+              <a-tag v-for="tag in picture.tags" :key="tag">
+                {{ tag }}
+              </a-tag>
+            </a-descriptions-item>
+            <a-descriptions-item label="Format">
+              {{ picture.picFormat ?? '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Width">
+              {{ picture.picWidth ?? '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Height">
+              {{ picture.picHeight ?? '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Ratio">
+              {{ picture.picScale ?? '-' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Size">
+              {{ formatSize(picture.picSize) }}
+            </a-descriptions-item>
+                <!-- <a-descriptions-item label="Color tone">
+              <a-space>
+                {{ picture.picColor ?? '-' }}
+                <div :style="{
+                  width: '24px',
+                  height: '18px',
+                  backgroundColor: picture.picColor ? toHexColor(picture.picColor) : 'transparent'
+                }"
+                >
+              </div>
+              </a-space>
+                </a-descriptions-item> -->
+          </a-descriptions>
+          <!--          图片操作-->
+          <a-space wrap>
+            <a-button :icon="h(ShareAltOutlined)"  type="primary" ghost @click="doShare">
+              Share
+            </a-button>
+            <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
+              Edit
+            </a-button>
+            <a-button :icon="h(DeleteOutlined)" v-if="canDelete" danger @click="doDelete">
+              Delete
+            </a-button>
+            <a-button
+              v-if="isAdmin"
+              type="primary"
+              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
+            >
+              Pass
+            </a-button>
+            <a-button
+              v-if="isAdmin"
+              danger
+              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
+            >
+              Reject
+            </a-button>
+            <a-button type="primary" @click="doDownload">
+              Download Original
+              <template #icon>
+                <DownloadOutlined />
+              </template>
+            </a-button>
+          </a-space>
+        </a-card>
+      </a-col>
+    </a-row>
       </div>
     </div>
     <ShareModal ref="shareModalRef" :link="shareLink" />

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="loginUserStore.loginUser.id"
+      v-if="loginUserStore.loginUser.id"
     id="globalSider"
     class="floating-sider"
     :class="{ 'expanded': isExpanded }"
@@ -77,15 +77,15 @@ const myOwnedTeamSpace = computed(() => {
  */
 const menuItems = computed(() => {
   const baseMenuItems = [
-    {
-      key: '/',
-      icon: () => h(PictureOutlined),
-      label: 'Public picture'
-    },
-    {
-      key: '/my_space',
-      icon: () => h(UserOutlined),
-      label: 'My space'
+  {
+    key: '/',
+    icon: () => h(PictureOutlined),
+    label: 'Public picture'
+  },
+  {
+    key: '/my_space',
+    icon: () => h(UserOutlined),
+    label: 'My space'
     }
   ]
 
@@ -111,18 +111,18 @@ const menuItems = computed(() => {
   // 如果有其他团队空间，创建团队空间分组
   if (otherTeamSpaces.length > 0) {
     const teamSpaceSubMenus = otherTeamSpaces.map((spaceUser) => {
-      const space = spaceUser.space
-      return {
-        key: '/space/' + spaceUser.spaceId,
-        label: space?.spaceName,
-      }
-    })
+    const space = spaceUser.space
+    return {
+      key: '/space/' + spaceUser.spaceId,
+      label: space?.spaceName,
+    }
+  })
 
-    const teamSpaceMenuGroup = {
-      type: 'group',
+  const teamSpaceMenuGroup = {
+    type: 'group',
       label: 'Joined teams',
       key: 'joinedTeams',
-      children: teamSpaceSubMenus,
+    children: teamSpaceSubMenus,
     }
 
     return [...baseMenuItems, myTeamMenuItem, teamSpaceMenuGroup]

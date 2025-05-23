@@ -296,6 +296,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
         user.setUserName(userAccount);
+        // 设置默认头像
+        user.setUserAvatar("https://github.com/Jiaheliu137/chart_bed/blob/main/test/default-avatar.png?raw=true");
         
         // 检查是否存在用户，如果不存在则设为管理员
         boolean hasUser = this.baseMapper.exists(null);
