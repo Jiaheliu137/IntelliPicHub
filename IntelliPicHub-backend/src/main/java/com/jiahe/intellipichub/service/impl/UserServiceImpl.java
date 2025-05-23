@@ -3,11 +3,8 @@ package com.jiahe.intellipichub.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jiahe.intellipichub.constant.UserConstant;
@@ -15,17 +12,24 @@ import com.jiahe.intellipichub.exception.BusinessException;
 import com.jiahe.intellipichub.exception.ErrorCode;
 import com.jiahe.intellipichub.manager.auth.StpKit;
 import com.jiahe.intellipichub.mapper.UserMapper;
+import com.jiahe.intellipichub.model.dto.user.UserEditBaseInfoRequest;
 import com.jiahe.intellipichub.model.dto.user.UserQueryRequest;
+import com.jiahe.intellipichub.model.dto.user.UserUpdateAvatarRequest;
+import com.jiahe.intellipichub.model.dto.user.UserUpdatePasswordRequest;
 import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.enums.UserRoleEnum;
 import com.jiahe.intellipichub.model.vo.LoginUserVO;
 import com.jiahe.intellipichub.model.vo.UserVO;
 import com.jiahe.intellipichub.service.UserService;
+import com.jiahe.intellipichub.manager.FileManager;
+import com.jiahe.intellipichub.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +45,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
+
+    @Resource
+    private FileManager fileManager;
 
     @Override
     public String getEncryptPassword(String userPassword) {
@@ -297,7 +304,203 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return user.getId();
     }
 
+    /**
+     * 更新用户基本信息（用户名和简介）
+     *
+     * @param user 当前登录用户
+     * @param userEditBaseInfoRequest 用户基本信息编辑请求
+     * @return 是否更新成功
+     */
+    @Override
+    public boolean updateUserInfo(User user, UserEditBaseInfoRequest userEditBaseInfoRequest) {
+        if (user == null || user.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "User not logged in");
+        }
+        
+        if (userEditBaseInfoRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Request parameters are empty");
+        }
+        
+        // 创建用户更新对象
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        
+        // 更新用户名（如果提供了）
+        if (StrUtil.isNotBlank(userEditBaseInfoRequest.getUserName())) {
+            updateUser.setUserName(userEditBaseInfoRequest.getUserName());
+        }
+        
+        // 更新用户简介（如果提供了）
+        if (StrUtil.isNotBlank(userEditBaseInfoRequest.getUserProfile())) {
+            updateUser.setUserProfile(userEditBaseInfoRequest.getUserProfile());
+        }
+        
+        // 如果没有任何更新项，直接返回成功
+        if (updateUser.getUserName() == null && updateUser.getUserProfile() == null) {
+            return true;
+        }
+        
+        // 更新用户信息到数据库
+        boolean result = this.updateById(updateUser);
+        
+        // 如果更新成功，还需要更新登录状态中的用户信息
+        if (result) {
+            // 获取更新后的完整用户信息
+            User updatedUser = this.getById(user.getId());
+            // 更新Sa-token中的会话信息
+            StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE, updatedUser);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 更新用户头像
+     *
+     * @param user 当前登录用户
+     * @param userUpdateAvatarRequest 用户头像更新请求
+     * @return 是否更新成功 
+     */
+    @Override
+    public boolean updateUserAvatar(User user, UserUpdateAvatarRequest userUpdateAvatarRequest) {
+        if (user == null || user.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "User not logged in");
+        }
+        
+        if (userUpdateAvatarRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Request parameters are empty");
+        }
+        
+        String userAvatar = userUpdateAvatarRequest.getUserAvatar();
+        if (StrUtil.isBlank(userAvatar)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Avatar URL cannot be empty");
+        }
+        
+        // 创建用户更新对象
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setUserAvatar(userAvatar);
+        
+        // 更新用户信息到数据库
+        boolean result = this.updateById(updateUser);
+        
+        // 如果更新成功，还需要更新登录状态中的用户信息
+        if (result) {
+            // 获取更新后的完整用户信息
+            User updatedUser = this.getById(user.getId());
+            // 更新Sa-token中的会话信息
+            StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE, updatedUser);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 用户上传头像
+     *
+     * @param user 当前登录用户
+     * @param file 头像文件
+     * @return 头像URL
+     */
+    @Override
+    public String uploadAvatar(User user, MultipartFile file) {
+        if (user == null || user.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "User not logged in");
+        }
+        
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Avatar file cannot be empty");
+        }
+        
+        // 使用FileManager上传图片到腾讯云对象存储
+        // 上传路径前缀使用 avatars/userId 确保每个用户的头像有唯一路径
+        String uploadPathPrefix = "avatars/" + user.getId();
+        UploadPictureResult uploadResult = fileManager.uploadPicture(file, uploadPathPrefix);
+        
+        if (uploadResult == null || StrUtil.isBlank(uploadResult.getUrl())) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Avatar upload failed");
+        }
+        
+        // 获取头像URL
+        String avatarUrl = uploadResult.getUrl();
+        
+        // 创建头像更新请求
+        UserUpdateAvatarRequest avatarRequest = new UserUpdateAvatarRequest();
+        avatarRequest.setUserAvatar(avatarUrl);
+        
+        // 调用更新头像的方法
+        boolean updateResult = this.updateUserAvatar(user, avatarRequest);
+        if (!updateResult) {
+            log.error("Update user avatar failed, userId={}, avatarUrl={}", user.getId(), avatarUrl);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "Avatar upload failed");
+        }
+        
+        return avatarUrl;
+    }
 
+    /**
+     * 修改用户密码
+     *
+     * @param user 当前登录用户
+     * @param updatePasswordRequest 修改密码请求
+     * @return 是否修改成功
+     */
+    @Override
+    public boolean updateUserPassword(User user, UserUpdatePasswordRequest updatePasswordRequest) {
+        if (user == null || user.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "User not logged in");
+        }
+        
+        if (updatePasswordRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Request parameters are empty");
+        }
+        
+        // 获取请求参数
+        String oldPassword = updatePasswordRequest.getOldPassword();
+        String newPassword = updatePasswordRequest.getNewPassword();
+        String checkPassword = updatePasswordRequest.getCheckPassword();
+        
+        // 校验参数是否为空
+        if (StrUtil.hasBlank(oldPassword, newPassword, checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "Password parameters cannot be empty");
+        }
+        
+        // 校验新密码长度是否符合要求
+        if (newPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "New password length cannot be less than 8");
+        }
+        
+        // 校验两次输入的新密码是否一致
+        if (!newPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "The new passwords you entered are inconsistent");
+        }
+        
+        // 校验原密码是否正确
+        String encryptedOldPassword = getEncryptPassword(oldPassword);
+        if (!encryptedOldPassword.equals(user.getUserPassword())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "The original password is incorrect");
+        }
+        
+        // 如果新密码与旧密码相同，则无需修改
+        if (encryptedOldPassword.equals(getEncryptPassword(newPassword))) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "New password cannot be the same as the old password");
+        }
+        
+        // 更新密码
+        User updateUser = new User();
+        updateUser.setId(user.getId());
+        updateUser.setUserPassword(getEncryptPassword(newPassword));
+        
+        boolean result = this.updateById(updateUser);
+        
+        // 更新缓存中的用户信息
+        if (result) {
+            User updatedUser = this.getById(user.getId());
+            StpKit.SPACE.getSession().set(UserConstant.USER_LOGIN_STATE, updatedUser);
+        }
+        
+        return result;
+    }
 }
 
 

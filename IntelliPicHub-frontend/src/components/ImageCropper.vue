@@ -15,14 +15,14 @@
     />
     <div style="margin-bottom: 16px" />
     <!-- 协同编辑操作 -->
-    <div class="image-edit-actions">
+    <div class="image-edit-actions" v-if="isTeamSpace">
       <a-space>
         <a-button v-if="editingUser" disabled> {{ editingUser.userName }}Editing</a-button>
         <a-button v-if="canEnterEdit" type="primary" ghost @click="enterEdit">Enter edit</a-button>
         <a-button v-if="canExitEdit" danger ghost @click="exitEdit">Exit edit</a-button>
       </a-space>
     </div>
-    <div style="margin-bottom: 16px" />
+    <div style="margin-bottom: 16px" v-if="isTeamSpace" />
 
     <!-- 图片操作 -->
     <div class="image-cropper-actions">
@@ -261,7 +261,6 @@ watchEffect(() => {
   if (isTeamSpace.value) {
     initWebsocket()
   }
-  initWebsocket()
 })
 
 onUnmounted(() => {

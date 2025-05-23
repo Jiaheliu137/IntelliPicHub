@@ -64,6 +64,13 @@ public class SpaceUserController {
         // 判断是否存在
         SpaceUser oldSpaceUser = spaceUserService.getById(id);
         ThrowUtils.throwIf(oldSpaceUser == null, ErrorCode.NOT_FOUND_ERROR);
+        
+        // 安全检查：获取当前登录用户，防止删除自己
+        User loginUser = userService.getLoginUser(request);
+        if (oldSpaceUser.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Cannot delete yourself from space");
+        }
+        
         // 操作数据库
         boolean result = spaceUserService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -111,15 +118,22 @@ public class SpaceUserController {
         if (spaceUserEditRequest == null || spaceUserEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        // 判断是否存在
+        long id = spaceUserEditRequest.getId();
+        SpaceUser oldSpaceUser = spaceUserService.getById(id);
+        ThrowUtils.throwIf(oldSpaceUser == null, ErrorCode.NOT_FOUND_ERROR);
+        
+        // 安全检查：获取当前登录用户，防止修改自己的角色
+        User loginUser = userService.getLoginUser(request);
+        if (oldSpaceUser.getUserId().equals(loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Cannot modify your own role");
+        }
+        
         // 将实体类和 DTO 进行转换
         SpaceUser spaceUser = new SpaceUser();
         BeanUtils.copyProperties(spaceUserEditRequest, spaceUser);
         // 数据校验
         spaceUserService.validSpaceUser(spaceUser, false);
-        // 判断是否存在
-        long id = spaceUserEditRequest.getId();
-        SpaceUser oldSpaceUser = spaceUserService.getById(id);
-        ThrowUtils.throwIf(oldSpaceUser == null, ErrorCode.NOT_FOUND_ERROR);
         // 操作数据库
         boolean result = spaceUserService.updateById(spaceUser);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

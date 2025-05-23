@@ -16,16 +16,18 @@ import SpaceAnalyzePage from '@/pages/SpaceAnalyzePage.vue'
 import SpaceUserManagePage from '@/pages/admin/SpaceUserManagePage.vue'
 import SpaceManagePage from '@/pages/admin/SpaceManagePage.vue'
 import VipExchangePage from '@/pages/VipExchangePage.vue'
+import UserProfile from '@/views/UserProfile.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Home',
       component: HomePage,
       meta: {
-        hideInMenu: false
+        hideInMenu: false,
+        keepAlive: true
       }
     },
     {
@@ -124,7 +126,8 @@ const router = createRouter({
       component: SpaceDetailPage,
       props: true,
       meta: {
-        hideInMenu: false
+        hideInMenu: false,
+        keepAlive: true
       }
     },
     {
@@ -151,6 +154,14 @@ const router = createRouter({
       component: VipExchangePage,
       meta: {
         hideInMenu: false
+      }
+    },
+    {
+      path: '/user/profile',
+      name: 'User Profile',
+      component: UserProfile,
+      meta: {
+        hideInMenu: true
       }
     },
     {

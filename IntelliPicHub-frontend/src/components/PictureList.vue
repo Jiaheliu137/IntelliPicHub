@@ -22,37 +22,29 @@
                 :src="picture.thumbnailUrl??picture.url"
               />
             </template>
-            <template v-if="showOp" #actions>
-              <a-tooltip title="Share">
-                <a-space @click="(e) => doShare(picture, e)">
-                  <ShareAltOutlined />
-                </a-space>
-              </a-tooltip>
-              <a-tooltip title="Search similar pictures">
-                <a-space @click="(e) => doSearch(picture, e)">
-                  <SearchOutlined />
-                </a-space>
-              </a-tooltip>
-              <a-tooltip title="Edit" v-if="canEdit">
-                <a-space  @click="e => doEdit(picture,e)">
-                  <EditOutlined />
-                </a-space>
-              </a-tooltip>
-              <a-tooltip title="Delete" v-if="canDelete">
-                <a-space  @click="e => doDelete(picture,e)">
-                  <DeleteOutlined />
-                </a-space>
-              </a-tooltip>
-            </template>
             <div class="picture-overlay">
-              <!-- <h3 class="picture-title">{{ picture.name }}</h3> -->
-              <div class="picture-tags">
-                <a-tag color="green">
-                  {{ picture.category ?? 'Other' }}
-                </a-tag>
-                <a-tag v-for="tag in picture.tags" :key="tag">
-                  {{ tag }}
-                </a-tag>
+              <!-- 操作按钮移动到这里 -->
+              <div v-if="showOp" class="picture-actions">
+                <a-tooltip title="Share">
+                  <a-space @click="(e) => doShare(picture, e)">
+                    <ShareAltOutlined />
+                  </a-space>
+                </a-tooltip>
+                <a-tooltip title="Search similar pictures">
+                  <a-space @click="(e) => doSearch(picture, e)">
+                    <SearchOutlined />
+                  </a-space>
+                </a-tooltip>
+                <a-tooltip title="Edit" v-if="canEdit">
+                  <a-space  @click="e => doEdit(picture,e)">
+                    <EditOutlined />
+                  </a-space>
+                </a-tooltip>
+                <a-tooltip title="Delete" v-if="canDelete">
+                  <a-space  @click="e => doDelete(picture,e)">
+                    <DeleteOutlined />
+                  </a-space>
+                </a-tooltip>
               </div>
             </div>
           </a-card>
@@ -101,7 +93,8 @@ const router = useRouter()
  * @param picture 图片信息
  */
 const doClickPicture = (picture: API.PictureVO) => {
-  window.open(`/picture/${picture.id}`, '_blank')
+  // window.open(`/picture/${picture.id}`, '_blank')
+  router.push(`/picture/${picture.id}`)
 }
 
 const doSearch = (picture: API.PictureVO, e: MouseEvent) => {
@@ -177,26 +170,6 @@ const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   border-radius: 8px;
 }
 
-.picture-card :deep(.ant-card-body) {
-  padding: 0;
-  position: relative;
-  height: 0;
-}
-
-.picture-card :deep(.ant-card-actions) {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  background-color: rgba(255, 255, 255, var(--overlay-opacity));
-  transform: translateY(-100%);
-  transition: transform 0.3s ease;
-  z-index: 2;
-}
-
-.picture-card:hover :deep(.ant-card-actions) {
-  transform: translateY(0);
-}
 
 .picture-image {
   width: 100%;
@@ -215,7 +188,10 @@ const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   left: 0;
   right: 0;
   padding: 10px;
-  background: rgba(255, 255, 255, var(--overlay-opacity));
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transform: translateY(100%);
   transition: transform 0.3s ease;
   z-index: 1;
@@ -225,29 +201,19 @@ const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   transform: translateY(0);
 }
 
-.picture-title {
-  margin: 0 0 8px 0;
-  color: rgba(0, 0, 0, var(--text-opacity));
-  font-size: 16px;
-  font-weight: bold;
-}
 
-.picture-tags {
+
+
+
+.picture-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  justify-content: space-around;
+  align-items: center;
+  gap: 8px;
 }
 
-.picture-tags :deep(.ant-tag) {
-  background-color: rgba(255, 255, 255, var(--overlay-opacity));
-  color: rgba(0, 0, 0, var(--text-opacity));
-  border: none;
-}
 
-.picture-tags :deep(.ant-tag-green) {
-  background-color: rgba(255, 255, 255, var(--overlay-opacity));
-  color: rgba(82, 196, 26, var(--text-opacity));
-  border: 1px solid rgba(82, 196, 26, var(--text-opacity));
-}
+
+
 
 </style>

@@ -97,7 +97,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { listSpaceByPageUsingPost, deleteSpaceUsingPost } from '@/api/spaceController.ts'
 import {
@@ -209,22 +209,48 @@ const doTableChange = (page: any) => {
 
 // 删除空间
 const doDelete = async (id: number) => {
-  if (confirm('Are you sure to delete this space?')) {
-    try {
-      const res = await deleteSpaceUsingPost({
-        id
-      })
-      if (res.data.code === 0) {
-        message.success('Delete successfully')
-        // 重新加载数据
-        fetchData()
-      } else {
-        message.error('Delete failed: ' + res.data.message)
-      }
-    } catch (error) {
-      console.error('Delete space failed:', error)
-      message.error('Delete space failed, please try again later')
+  if (!id) {
+    return
+  }
+
+  // 查找要删除的空间记录
+  const recordToDelete = dataList.value.find(item => item.id === id)
+
+  // 显示确认对话框
+  const confirmed = await new Promise((resolve) => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete space "${recordToDelete?.spaceName || 'this space'}"? This action cannot be undone.`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk() {
+        resolve(true)
+      },
+      onCancel() {
+        resolve(false)
+      },
+    })
+  })
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const res = await deleteSpaceUsingPost({
+      id
+    })
+    if (res.data.code === 0) {
+      message.success('Delete successfully')
+      // 重新加载数据
+      fetchData()
+    } else {
+      message.error('Delete failed: ' + res.data.message)
     }
+  } catch (error) {
+    console.error('Delete space failed:', error)
+    message.error('Delete space failed, please try again later')
   }
 }
 

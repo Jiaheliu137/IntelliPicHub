@@ -81,6 +81,11 @@ public class SpaceUserServiceImpl extends ServiceImpl<SpaceUserMapper, SpaceUser
         if (spaceRole != null && spaceRoleEnum == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "Space role is not exist");
         }
+        
+        // 安全检查：不允许设置其他用户为管理员
+        if (!add && spaceRole != null && SpaceRoleEnum.ADMIN.getValue().equals(spaceRole)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "Cannot set other users as admin");
+        }
     }
 
     @Override

@@ -33,12 +33,19 @@
           <a-space>
             <a-avatar :src="record.user?.userAvatar" />
             {{ record.user?.userName }}
+            <a-tag v-if="isCurrentUser(record)" color="blue">Me</a-tag>
           </a-space>
         </template>
         <template v-if="column.dataIndex === 'spaceRole'">
+          <!-- 如果是当前用户，只显示角色文本，不允许修改 -->
+          <span v-if="isCurrentUser(record)" style="color: #1890ff; font-weight: 500;">
+            {{ SPACE_ROLE_OPTIONS.find(option => option.value === record.spaceRole)?.label || record.spaceRole }}
+          </span>
+          <!-- 如果不是当前用户，显示下拉框允许修改 -->
           <a-select
+            v-else
             v-model:value="record.spaceRole"
-            :options="SPACE_ROLE_OPTIONS"
+            :options="filteredRoleOptions"
             @change="(value) => editSpaceRole(value, record)"
           />
         </template>
@@ -47,7 +54,16 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space wrap>
-            <a-button type="link" danger @click="doDelete(record.id)">Delete</a-button>
+            <!-- 如果不是当前用户，才显示删除按钮 -->
+            <a-button
+              v-if="!isCurrentUser(record)"
+              type="link"
+              danger
+              @click="doDelete(record.id)"
+            >
+              Delete
+            </a-button>
+            <span v-else style="color: #999; font-size: 12px;">Cannot delete yourself</span>
           </a-space>
         </template>
       </template>
@@ -57,10 +73,12 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
 
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
 import { SPACE_ROLE_OPTIONS } from '../../constants/space.ts'
+
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 
 import {
   addSpaceUserUsingPost,
@@ -68,6 +86,9 @@ import {
   editSpaceUserUsingPost,
   listSpaceUserUsingPost
 } from '@/api/spaceUserController.ts'
+
+// 获取当前登录用户信息
+const loginUserStore = useLoginUserStore()
 
 // 定义属性
 interface Props {
@@ -81,6 +102,20 @@ const dataList = ref<API.SpaceUserVO[]>([])
 
 // 添加成员表单
 const formData = reactive<API.SpaceUserAddRequest>({})
+
+/**
+ * @description 判断是否是当前登录用户
+ * @param {API.SpaceUserVO} record - 用户记录
+ * @returns {boolean} 是否是当前用户
+ */
+const isCurrentUser = (record: API.SpaceUserVO): boolean => {
+  return record.user?.id === loginUserStore.loginUser.id
+}
+
+/**
+ * @description 过滤角色选项，移除admin选项
+ */
+const filteredRoleOptions = SPACE_ROLE_OPTIONS.filter(option => option.value !== 'admin')
 
 // 创建成员
 const handleSubmit = async () => {
@@ -121,10 +156,6 @@ const columns = [
   }
 ]
 
-
-
-
-
 // 获取数据
 const fetchData = async () => {
   const spaceId = props.id
@@ -148,6 +179,12 @@ onMounted(() => {
 })
 
 const editSpaceRole = async (value, record) => {
+  // 检查是否尝试修改自己的角色
+  if (isCurrentUser(record)) {
+    message.error('Cannot modify your own role')
+    return
+  }
+
   const res = await editSpaceUserUsingPost({
     id: record.id,
     spaceRole: value
@@ -159,12 +196,40 @@ const editSpaceRole = async (value, record) => {
   }
 }
 
-
 // 删除空间
 const doDelete = async (id: string) => {
   if (!id) {
     return
   }
+
+  // 查找要删除的用户记录
+  const recordToDelete = dataList.value.find(item => item.id === id)
+  if (recordToDelete && isCurrentUser(recordToDelete)) {
+    message.error('Cannot delete yourself')
+    return
+  }
+
+  // 显示确认对话框
+  const confirmed = await new Promise((resolve) => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: `Are you sure you want to remove user "${recordToDelete?.user?.userName}" from this space?`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk() {
+        resolve(true)
+      },
+      onCancel() {
+        resolve(false)
+      },
+    })
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   const res = await deleteSpaceUserUsingPost({ id })
   if (res.data.code === 0) {
     message.success('Delete success')
@@ -174,7 +239,6 @@ const doDelete = async (id: string) => {
     message.error('Failed to delete')
   }
 }
-
 
 </script>
 

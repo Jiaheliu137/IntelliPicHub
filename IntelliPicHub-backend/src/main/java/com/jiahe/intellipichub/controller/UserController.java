@@ -17,6 +17,7 @@ import com.jiahe.intellipichub.model.vo.UserVO;
 import com.jiahe.intellipichub.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -208,6 +209,87 @@ public class UserController {
         return ResultUtils.success(result);
     }
     
+    /**
+     * 用户编辑基本信息（用户名和简介）
+     *
+     * @param userEditBaseInfoRequest 用户基本信息编辑请求
+     * @param request HTTP请求
+     * @return 操作结果
+     */
+    @PostMapping("/edit")
+    public BaseResponse<Boolean> editUserInfo(@RequestBody UserEditBaseInfoRequest userEditBaseInfoRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(userEditBaseInfoRequest == null, ErrorCode.PARAMS_ERROR);
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 调用Service层更新用户信息
+        boolean result = userService.updateUserInfo(loginUser, userEditBaseInfoRequest);
+        
+        return ResultUtils.success(result);
+    }
+    
+    /**
+     * 用户更新头像（通过URL）
+     *
+     * @param userUpdateAvatarRequest 用户头像更新请求
+     * @param request HTTP请求
+     * @return 操作结果
+     */
+    @PostMapping("/update/avatar")
+    public BaseResponse<Boolean> updateAvatar(@RequestBody UserUpdateAvatarRequest userUpdateAvatarRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(userUpdateAvatarRequest == null, ErrorCode.PARAMS_ERROR);
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 调用Service层更新头像
+        boolean result = userService.updateUserAvatar(loginUser, userUpdateAvatarRequest);
+        
+        return ResultUtils.success(result);
+    }
+    
+    /**
+     * 用户上传头像文件
+     *
+     * @param file 头像文件
+     * @param request HTTP请求
+     * @return 头像URL
+     */
+    @PostMapping("/upload/avatar")
+    public BaseResponse<String> uploadAvatar(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+        // 验证文件参数
+        ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "头像文件不能为空");
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 调用Service层上传头像
+        String avatarUrl = userService.uploadAvatar(loginUser, file);
+        
+        return ResultUtils.success(avatarUrl);
+    }
+
+    /**
+     * 用户修改密码
+     *
+     * @param updatePasswordRequest 修改密码请求
+     * @param request HTTP请求
+     * @return 操作结果
+     */
+    @PostMapping("/update/password")
+    public BaseResponse<Boolean> updatePassword(@RequestBody UserUpdatePasswordRequest updatePasswordRequest, HttpServletRequest request) {
+        // 校验请求参数
+        ThrowUtils.throwIf(updatePasswordRequest == null, ErrorCode.PARAMS_ERROR);
+        
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        
+        // 调用Service层修改密码
+        boolean result = userService.updateUserPassword(loginUser, updatePasswordRequest);
+        
+        return ResultUtils.success(result);
+    }
 }
 
 

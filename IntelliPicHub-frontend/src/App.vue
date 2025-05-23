@@ -1,7 +1,9 @@
 <template>
   <div id="app">
-    <a-config-provider :locale="currentLocale">
-      <BasicLayout />
+<!--    <a-config-provider :locale="currentLocale">-->
+    <a-config-provider :locale="enUS">
+
+    <BasicLayout />
     </a-config-provider>
   </div>
 </template>
@@ -46,7 +48,7 @@ const getLocaleByLanguage = (userLang: string) => {
   }
 }
 
-const currentLocale = ref(zhCN) // 默认中文
+const currentLocale = ref(enUS) // 默认中文
 
 onMounted(() => {
   const userLang = getUserLanguage()

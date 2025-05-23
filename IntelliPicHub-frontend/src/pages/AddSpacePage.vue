@@ -58,7 +58,7 @@ import {
   addSpaceUsingPost,
   getSpaceVoByIdUsingGet,
   listSpaceLevelUsingGet,
-  editSpaceUsingPost, updateSpaceUsingPost
+  updateSpaceUsingPost
 } from '@/api/spaceController.ts'
 import { useRoute } from 'vue-router'
 import router from '@/router'
@@ -66,16 +66,16 @@ import { SPACE_LEVEL_ENUM, SPACE_LEVEL_OPTIONS, SPACE_TYPE_ENUM, SPACE_TYPE_MAP 
 import { formatSize } from '../utils'
 
 
-const spaceForm = reactive<API.SpaceAddRequest | API.SpaceEditRequest>({
-  spaceName: 'Personal Space',
+const spaceForm = reactive({
+  spaceName: '',
   spaceLevel: SPACE_LEVEL_ENUM.COMMON
-})
+} as any)
 
 const route = useRoute()
 const oldSpace = ref<API.SpaceVO>()
 const loading = ref(false)
 const spaceLevelList = ref<API.SpaceLevel[]>([])
-// 空间类别,默认为私有空间
+
 // 空间类别
 const spaceType = computed(() => {
   if (route.query?.type) {
@@ -84,6 +84,13 @@ const spaceType = computed(() => {
   return SPACE_TYPE_ENUM.PRIVATE
 })
 
+// 根据空间类型获取默认名称
+const defaultSpaceName = computed(() => {
+  if (spaceType.value === SPACE_TYPE_ENUM.TEAM) {
+    return 'Team Space'
+  }
+  return 'Personal Space'
+})
 
 /**
  * 获取空间详情用于编辑
@@ -93,9 +100,9 @@ const getOldSpace = async () => {
   if (id) {
     loading.value = true
     try {
-      // 确保 id 是字符串，不进行 Number 转换
+      const idNumber = Array.isArray(id) ? Number(id[0]) : Number(id)
       const res = await getSpaceVoByIdUsingGet({
-        id: id
+        id: idNumber
       })
       if (res.data.code === 0 && res.data.data) {
         const data = res.data.data
@@ -106,11 +113,14 @@ const getOldSpace = async () => {
       } else {
         message.error('Failed to get space info, ' + res.data.message)
       }
-    } catch (_) {
+    } catch {
       message.error('Failed to get space info')
     } finally {
       loading.value = false
     }
+  } else {
+    // 如果不是编辑模式，设置默认空间名称
+    spaceForm.spaceName = defaultSpaceName.value
   }
 }
 
@@ -126,7 +136,7 @@ const fetchSpaceLevelList = async () => {
     } else {
       message.error('Failed to load space level, ' + res.data.message)
     }
-  } catch (_) {
+  } catch {
     message.error('Failed to load space level')
   }
 }
@@ -181,7 +191,7 @@ const handleSubmit = async () => {
     } else {
       message.error((id ? 'Edit' : 'Create') + ' failed, ' + res.data.message)
     }
-  } catch (_) {
+  } catch {
     message.error((route.query?.id ? 'Edit' : 'Create') + ' failed')
   } finally {
     loading.value = false

@@ -29,6 +29,21 @@ export async function deleteUserUsingPost(
   })
 }
 
+/** editUserInfo POST /api/user/edit */
+export async function editUserInfoUsingPost(
+  body: API.UserEditBaseInfoRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/edit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** exchangeVip POST /api/user/exchange/vip */
 export async function exchangeVipUsingPost(
   body: API.VipExchangeRequest,
@@ -146,6 +161,72 @@ export async function updateUserUsingPost(
       'Content-Type': 'application/json',
     },
     data: body,
+    ...(options || {}),
+  })
+}
+
+/** updateAvatar POST /api/user/update/avatar */
+export async function updateAvatarUsingPost(
+  body: API.UserUpdateAvatarRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/update/avatar', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** updatePassword POST /api/user/update/password */
+export async function updatePasswordUsingPost(
+  body: API.UserUpdatePasswordRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/update/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** uploadAvatar POST /api/user/upload/avatar */
+export async function uploadAvatarUsingPost(
+  body: {},
+  file?: File,
+  options?: { [key: string]: any }
+) {
+  const formData = new FormData()
+
+  if (file) {
+    formData.append('file', file)
+  }
+
+  Object.keys(body).forEach((ele) => {
+    const item = (body as any)[ele]
+
+    if (item !== undefined && item !== null) {
+      if (typeof item === 'object' && !(item instanceof File)) {
+        if (item instanceof Array) {
+          item.forEach((f) => formData.append(ele, f || ''))
+        } else {
+          formData.append(ele, JSON.stringify(item))
+        }
+      } else {
+        formData.append(ele, item)
+      }
+    }
+  })
+
+  return request<API.BaseResponseString_>('/api/user/upload/avatar', {
+    method: 'POST',
+    data: formData,
+    requestType: 'form',
     ...(options || {}),
   })
 }

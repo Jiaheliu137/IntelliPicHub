@@ -4,7 +4,7 @@
       <a-col flex="200px">
         <router-link to="/">
           <div class="title-bar">
-            <img class="logo" src="../assets/logo.png" alt="logo" />
+            <img class="logo" src="../assets/logo2.png" alt="logo" />
             <div class="title">IntelliPicHub</div>
           </div>
         </router-link>
@@ -36,6 +36,12 @@
                       My Space
                     </router-link>
                   </a-menu-item>
+                  <a-menu-item>
+                    <router-link to="/user/profile">
+                      <SettingOutlined />
+                      Settings
+                    </router-link>
+                  </a-menu-item>
                   <a-menu-item @click="doLogout">
                     <LogoutOutlined />
                     Logout
@@ -55,16 +61,17 @@
 </template>
 <script lang="ts" setup>
 import { computed, h, ref } from 'vue'
-import { HomeOutlined, LogoutOutlined, UserOutlined, StarOutlined } from '@ant-design/icons-vue'
-import { MenuProps, message } from 'ant-design-vue'
-import { useRouter, RouteRecordRaw } from 'vue-router'
+import { HomeOutlined, LogoutOutlined, UserOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import type { MenuProps } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
+import { useRouter, type RouteRecordRaw } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { userLogoutUsingPost } from '@/api/userController.ts'
 import checkAccess from '@/access/checkAccess.ts'
 
 const loginUserStore = useLoginUserStore()
 
-// const items = ref<MenuProps['items']>()
+const router = useRouter() //get the current router instance
 
 // 未经过滤的菜单项
 const originMenus = [
@@ -99,24 +106,24 @@ const originMenus = [
     key: '/admin/spaceManage',
     label: 'SpaceManage',
     title: 'admin space manage'
-  },
-  {
-    key: 'others',
-    label: h('a', { href: 'https://github.com/Jiaheliu137', target: '_blank' }, 'GitHub'),
-    title: 'github'
   }
+  // {
+  //   key: 'others',
+  //   label: h('a', { href: 'https://github.com/Jiaheliu137', target: '_blank' }, 'GitHub'),
+  //   title: 'github'
+  // }
 ]
 
 /**
  * @description 将菜单项转换为路由项
- * @param {Object} menu - 菜单项
- * @returns {Object} 与菜单项key对应的路由项
+ * @param {any} menu - 菜单项
+ * @returns {RouteRecordRaw} 与菜单项key对应的路由项
  */
 const menuToRouteItem = (menu: any): RouteRecordRaw => {
   // 获取所有路由
   const routes = router.getRoutes()
   // 根据菜单的key查找对应的路由
-  const route = routes.find((route) => route.path === menu.key)
+  const route = routes.find((route) => route.path === menu?.key)
   // 如果找到对应路由则返回，否则返回一个默认的空路由对象
   return route || ({} as RouteRecordRaw)
 }
@@ -148,16 +155,15 @@ const menus = computed(() => {
   return filterMenus(originMenus)
 })
 
-const router = useRouter() //get the current router instance
 // 当前要高亮的菜单项
 const current = ref<string[]>()
 // 监听路由变化，更新高亮菜单项
-router.afterEach((to, from, next) => {
+router.afterEach((to) => {
   current.value = [to.path]
 })
 
 // 路由跳转事件 Routing Transition Event
-const doMenuClick = ({ key }) => {
+const doMenuClick = ({ key }: { key: string }) => {
   router.push({
     path: key
   })
@@ -179,9 +185,14 @@ const doLogout = async () => {
 </script>
 
 <style scoped>
+#globalHeader {
+  height: 100%;
+}
+
 #globalHeader .title-bar {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
 .logo {
@@ -192,5 +203,63 @@ const doLogout = async () => {
   color: black;
   font-size: 18px;
   margin-left: 16px;
+}
+
+/* 导航菜单样式 */
+:deep(.ant-menu) {
+  background: transparent !important;
+  border-bottom: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  flex: 1;
+}
+
+:deep(.ant-menu-item) {
+  margin: 0 6px !important;
+  padding: 0 20px !important;
+  border-radius: 8px !important;
+  height: 42px !important;
+  line-height: 42px !important;
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: rgba(0, 0, 0, 0.85) !important;
+}
+
+:deep(.ant-menu-item)::after {
+  display: none !important;
+}
+
+:deep(.ant-menu-item:hover) {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(24, 144, 255, 0.3) !important;
+  color: #1890ff !important;
+  transform: translateY(-1px);
+}
+
+:deep(.ant-menu-item-selected) {
+  background: rgba(230, 244, 255, 0.8) !important;
+  border-color: rgba(24, 144, 255, 0.5) !important;
+  color: #1890ff !important;
+  font-weight: 600 !important;
+}
+
+/* 用户信息区域样式 */
+.user-login-status {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* 调整行布局 */
+:deep(.ant-row) {
+  height: 100%;
+  align-items: center;
 }
 </style>

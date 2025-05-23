@@ -148,6 +148,10 @@ import { ColorPicker } from 'vue3-colorpicker'
 import 'vue3-colorpicker/style.css'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 
+// 设置组件名称以匹配路由配置，这样keep-alive才能正确缓存
+defineOptions({
+  name: 'SpaceInformation'
+})
 
 // 数据
 const dataList = ref<API.PictureVO[]>([])
@@ -187,6 +191,13 @@ const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_U
 const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
 const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
 
+// 搜索条件
+const searchParams = ref<API.PictureQueryRequest>({
+  current: 1,
+  pageSize: 24,
+  sortField: 'createTime',
+  sortOrder: 'descend'
+})
 
 // ------------获取空间详情------------
 const fetchSpaceDetail = async () => {
@@ -204,29 +215,6 @@ const fetchSpaceDetail = async () => {
   }
 }
 
-onMounted(() => {
-  fetchSpaceDetail()
-})
-
-// ------------获取图片列表------------
-// 搜索条件
-// ref 包装的是一个带有 .value 的引用对象可以完全替换 .value 的内容，Vue 会保持响应性
-// reactive 直接代理对象本身必须保持对象的引用不变，只能修改其属性如果整体替换会丢失响应性
-// 为了后面整体替换这里用ref
-const searchParams = ref<API.PictureQueryRequest>({
-  current: 1,
-  pageSize: 24,
-  sortField: 'createTime',
-  sortOrder: 'descend'
-})
-
-// 分页参数
-const onPageChange = (page: number, pageSize: number) => {
-  searchParams.value.current = page
-  searchParams.value.pageSize = pageSize
-  fetchData()
-}
-
 // 获取数据
 const fetchData = async () => {
   loading.value = true
@@ -234,29 +222,24 @@ const fetchData = async () => {
   const params = {
     spaceId: props.id,
     ...searchParams.value,
-    tags: [] as String[]
+    tags: [] as string[]
   }
-  const res = await listPictureVoByPageUsingPost(params)
-  if (res.data.code === 0 && res.data.data) {
-    dataList.value = res.data.data.records ?? []
-    total.value = res.data.data.total ?? 0
-  } else {
-    message.error('Failed to get data，' + res.data.message)
+
+  try {
+    const res = await listPictureVoByPageUsingPost(params)
+    if (res.data.code === 0 && res.data.data) {
+      dataList.value = res.data.data.records ?? []
+      total.value = res.data.data.total ?? 0
+    } else {
+      message.error('Failed to get data，' + res.data.message)
+    }
+  } catch (error) {
+    console.error('Failed to fetch space data:', error)
+    message.error('Failed to get data')
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
-
-// 页面加载时获取数据，请求一次
-onMounted(() => {
-  fetchData()
-})
-
-const doSearch = () => {
-  // 重置搜索条件
-  searchParams.value.current = 1
-  fetchData()
-}
-
 
 // 获取标签和分类选项
 const getTagCategoryOptions = async () => {
@@ -283,12 +266,14 @@ const getTagCategoryOptions = async () => {
   }
 }
 
+// 组件挂载时初始化
 onMounted(() => {
+  fetchSpaceDetail()
   getTagCategoryOptions()
+  fetchData()
 })
 
-
-
+// 监听路由参数变化（当空间ID变化时）
 watch(
   () => props.id,
   (newSpaceId) => {
@@ -297,8 +282,18 @@ watch(
   },
 )
 
+// 分页参数
+const onPageChange = (page: number, pageSize: number) => {
+  searchParams.value.current = page
+  searchParams.value.pageSize = pageSize
+  fetchData()
+}
 
-
+const doSearch = () => {
+  // 重置搜索条件
+  searchParams.value.current = 1
+  fetchData()
+}
 
 // 图片上传相关
 const uploadModalVisible = ref(false)
@@ -350,7 +345,6 @@ const doBatchEdit = () => {
     batchEditPictureModalRef.value.openModal()
   }
 }
-
 </script>
 
 <style scoped>

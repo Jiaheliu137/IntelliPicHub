@@ -53,7 +53,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { deleteUserUsingPost, listUserVoByPageUsingPost } from '@/api/userController.ts'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
 const columns = [
@@ -157,7 +157,32 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
-  const res = await deleteUserUsingPost({ id })
+
+  // 查找要删除的用户记录
+  const recordToDelete = dataList.value.find(item => String(item.id) === id)
+
+  // 显示确认对话框
+  const confirmed = await new Promise((resolve) => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete user "${recordToDelete?.userName || recordToDelete?.userAccount || 'this user'}"?`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk() {
+        resolve(true)
+      },
+      onCancel() {
+        resolve(false)
+      },
+    })
+  })
+
+  if (!confirmed) {
+    return
+  }
+
+  const res = await deleteUserUsingPost({ id: Number(id) })
   if (res.data.code === 0) {
     message.success('Delete success')
     //刷新数据

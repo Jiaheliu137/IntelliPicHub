@@ -129,7 +129,7 @@ import {
   listPictureByPageUsingPost,
   listPictureVoByPageUsingPost
 } from '@/api/pictureController.ts'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { PIC_REVIEW_STATUS_ENUM, PIC_REVIEW_STATUS_MAP, PIC_REVIEW_STATUS_OPTIONS } from '../../constants/picture.ts'
 
@@ -256,6 +256,31 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
+
+  // 查找要删除的图片记录
+  const recordToDelete = dataList.value.find(item => item.id === id)
+
+  // 显示确认对话框
+  const confirmed = await new Promise((resolve) => {
+    Modal.confirm({
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete picture "${recordToDelete?.name || 'this picture'}"?`,
+      okText: 'Yes, Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk() {
+        resolve(true)
+      },
+      onCancel() {
+        resolve(false)
+      },
+    })
+  })
+
+  if (!confirmed) {
+    return
+  }
+
   const res = await deletePictureUsingPost({ id })
   if (res.data.code === 0) {
     message.success('Delete success')

@@ -691,6 +691,11 @@ declare namespace API {
     userRole?: string
   }
 
+  type UserEditBaseInfoRequest = {
+    userName?: string
+    userProfile?: string
+  }
+
   type UserLoginRequest = {
     userAccount?: string
     userPassword?: string
@@ -714,6 +719,16 @@ declare namespace API {
     userPassword?: string
   }
 
+  type UserUpdateAvatarRequest = {
+    userAvatar?: string
+  }
+
+  type UserUpdatePasswordRequest = {
+    checkPassword?: string
+    newPassword?: string
+    oldPassword?: string
+  }
+
   type UserUpdateRequest = {
     id?: number
     userAvatar?: string
@@ -731,6 +746,9 @@ declare namespace API {
     userName?: string
     userProfile?: string
     userRole?: string
+    vipCode?: string
+    vipExpireTime?: string
+    vipNumber?: number
   }
 
   type VipExchangeRequest = {

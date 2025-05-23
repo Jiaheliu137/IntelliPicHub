@@ -55,13 +55,16 @@
 
 
 <script setup lang="ts">
-
 import { onMounted, reactive, ref } from 'vue'
 import { listPictureTagCategoryUsingGet, listPictureVoByPageUsingPost } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue'
 import ShareModal from '@/components/ShareModal.vue'
 
+// 设置组件名称以匹配路由配置，这样keep-alive才能正确缓存
+defineOptions({
+  name: 'Home'
+})
 
 // 数据
 const dataList = ref<API.PictureVO[]>([])
@@ -77,8 +80,15 @@ const searchParams = reactive<API.PictureQueryRequest>({
   current: 1,
   pageSize: 24,
   sortField: 'createTime',
-  sortOrder: 'descend'
+  sortOrder: 'descend',
+  searchText: ''
 })
+
+// 分类，标签
+const categoryList = ref<string[]>([])
+const selectedCategory = ref<string>('all')
+const tagList = ref<string[]>([])
+const selectedTagList = ref<boolean[]>([])
 
 // 分页参数
 const onPageChange = (page: number, pageSize: number) => {
@@ -103,56 +113,53 @@ const fetchData = async () => {
       params.tags.push(tagList.value[index])
     }
   })
-  const res = await listPictureVoByPageUsingPost(params)
-  if (res.data.data) {
-    dataList.value = res.data.data.records ?? []
-    total.value = res.data.data.total ?? 0
-  } else {
-    message.error('Failed to get data，' + res.data.message)
+
+  try {
+    const res = await listPictureVoByPageUsingPost(params)
+    if (res.data.data) {
+      dataList.value = res.data.data.records ?? []
+      total.value = res.data.data.total ?? 0
+    } else {
+      message.error('Failed to get data，' + res.data.message)
+    }
+  } catch (error) {
+    console.error('Failed to fetch data:', error)
+    message.error('Failed to get data')
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
-
-// 页面加载时请求一次
-onMounted(() => {
-  fetchData()
-})
-
 const doSearch = () => {
-  // 重置搜索条件
+  // 重置页码但保留其他搜索条件
   searchParams.current = 1
   fetchData()
 }
 
-
-
-
-// 分类，标签
-const categoryList = ref<string[]>([])
-const selectedCategory = ref<string>('all')
-const tagList = ref<string[]>([])
-const selectedTagList = ref<boolean[]>([])
-
 // 获取标签和分类选项
 const getTagCategoryOptions = async () => {
-  const res = await listPictureTagCategoryUsingGet()
-  if (res.data.code === 0 && res.data.data) {
-    // 转换成下拉选项组件接受的格式
-    categoryList.value = res.data.data.categoryList ?? []
-    tagList.value = res.data.data.tagList ?? []
-    // 初始化标签选择状态
-    selectedTagList.value = new Array(tagList.value.length).fill(false)
-  } else {
-    message.error('Fail to load category and tags，' + res.data.message)
+  try {
+    const res = await listPictureTagCategoryUsingGet()
+    if (res.data.code === 0 && res.data.data) {
+      // 转换成下拉选项组件接受的格式
+      categoryList.value = res.data.data.categoryList ?? []
+      tagList.value = res.data.data.tagList ?? []
+      // 初始化标签选择状态
+      selectedTagList.value = new Array(tagList.value.length).fill(false)
+    } else {
+      message.error('Fail to load category and tags，' + res.data.message)
+    }
+  } catch (error) {
+    console.error('Failed to get tag/category options:', error)
+    message.error('Failed to load categories and tags')
   }
 }
 
+// 组件挂载时初始化
 onMounted(() => {
   getTagCategoryOptions()
+  fetchData()
 })
-
-
 </script>
 
 

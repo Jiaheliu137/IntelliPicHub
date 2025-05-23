@@ -2,10 +2,14 @@ package com.jiahe.intellipichub.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.jiahe.intellipichub.model.dto.user.UserEditBaseInfoRequest;
 import com.jiahe.intellipichub.model.dto.user.UserQueryRequest;
+import com.jiahe.intellipichub.model.dto.user.UserUpdateAvatarRequest;
+import com.jiahe.intellipichub.model.dto.user.UserUpdatePasswordRequest;
 import com.jiahe.intellipichub.model.entity.User;
 import com.jiahe.intellipichub.model.vo.LoginUserVO;
 import com.jiahe.intellipichub.model.vo.UserVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -96,4 +100,39 @@ public interface UserService extends IService<User> {
      */
     boolean exchangeVip(User user,String vipCode);
 
+    /**
+     * 更新用户基本信息（用户名和简介）
+     * 
+     * @param user 当前登录用户
+     * @param userEditBaseInfoRequest 用户基本信息编辑请求
+     * @return 是否更新成功
+     */
+    boolean updateUserInfo(User user, UserEditBaseInfoRequest userEditBaseInfoRequest);
+    
+    /**
+     * 更新用户头像
+     * 
+     * @param user 当前登录用户
+     * @param userUpdateAvatarRequest 用户头像更新请求
+     * @return 是否更新成功 
+     */
+    boolean updateUserAvatar(User user, UserUpdateAvatarRequest userUpdateAvatarRequest);
+    
+    /**
+     * 用户上传头像
+     * 
+     * @param user 当前登录用户
+     * @param file 头像文件
+     * @return 头像URL
+     */
+    String uploadAvatar(User user, MultipartFile file);
+    
+    /**
+     * 修改用户密码
+     * 
+     * @param user 当前登录用户
+     * @param updatePasswordRequest 修改密码请求
+     * @return 是否修改成功
+     */
+    boolean updateUserPassword(User user, UserUpdatePasswordRequest updatePasswordRequest);
 }
