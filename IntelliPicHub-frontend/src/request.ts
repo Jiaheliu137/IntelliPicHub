@@ -1,16 +1,14 @@
 import axios from 'axios'
 import { message } from 'ant-design-vue'
-
-const DEV_BASE_URL = 'http://localhost:8123'
-const PROD_BASE_URL = 'https://picture.jiaheliu.top'
+import { DEV_HTTP_URL, PROD_HTTP_URL } from './config'
 
 /**
  * 根据环境自动选择 API 地址
- * 生产环境使用 PROD_BASE_URL，开发环境使用 DEV_BASE_URL
+ * 生产环境使用 PROD_HTTP_URL，开发环境使用 DEV_HTTP_URL
  */
 const getBaseURL = () => {
   // 使用 import.meta.env.PROD 判断是否为生产环境
-  return import.meta.env.PROD ? PROD_BASE_URL : DEV_BASE_URL
+  return import.meta.env.PROD ? PROD_HTTP_URL : DEV_HTTP_URL
 }
 
 // Create Axios instance

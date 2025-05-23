@@ -304,7 +304,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (!hasUser) {
             user.setUserRole(UserRoleEnum.ADMIN.getValue());
         } else {
-            user.setUserRole(UserRoleEnum.USER.getValue());
+        user.setUserRole(UserRoleEnum.USER.getValue());
         }
         
         boolean saveResult = this.save(user);
