@@ -3,7 +3,18 @@
     <!--    空间信息-->
     <a-flex justify="space-between" align="bottom">
       <a-flex align="center">
-        <h2>{{ space.spaceName }} ({{ SPACE_TYPE_MAP[space.spaceType] }})</h2>
+        <h2>
+          <a-button
+            v-if="canManageSpaceUser"
+            type="text"
+            size="small"
+            :icon="h(EditOutlined)"
+            @click="showEditSpaceNameModal"
+            style="margin-right: 8px; color: #1890ff;"
+            title="Edit Space Name"
+          />
+          {{ space.spaceName }} ({{ SPACE_TYPE_MAP[space.spaceType] }})
+        </h2>
         <a-space>
           <a-tag v-if="space.spaceLevel === 0" color="blue" class="space-level-tag">
             <star-outlined />
@@ -118,6 +129,33 @@
       :tagOptions="tagOptions"
       @success="onBatchEditPictureSuccess"
     />
+
+    <!-- 编辑空间名称弹窗 -->
+    <a-modal
+      v-model:visible="editSpaceNameModalVisible"
+      title="Edit Space Name"
+      @ok="handleEditSpaceNameOk"
+      :confirmLoading="editSpaceNameLoading"
+      @cancel="editSpaceNameModalVisible = false"
+      width="500px"
+    >
+      <a-form
+        :model="editSpaceNameForm"
+        :rules="editSpaceNameRules"
+        ref="editSpaceNameFormRef"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 18 }"
+      >
+        <a-form-item name="spaceName" label="Space Name" has-feedback>
+          <a-input
+            v-model:value="editSpaceNameForm.spaceName"
+            placeholder="Enter space name"
+            maxlength="50"
+            show-count
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -130,8 +168,8 @@ import {
 } from '@ant-design/icons-vue'
 import { onMounted, ref, h, watch, computed } from 'vue'
 import {
-  getSpaceVoByIdUsingGet
-
+  getSpaceVoByIdUsingGet,
+  editSpaceUsingPost
 } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
 import {
@@ -343,6 +381,48 @@ const onBatchEditPictureSuccess = () => {
 const doBatchEdit = () => {
   if (batchEditPictureModalRef.value) {
     batchEditPictureModalRef.value.openModal()
+  }
+}
+
+// 编辑空间名称相关
+const editSpaceNameModalVisible = ref(false)
+const editSpaceNameForm = ref({ spaceName: '' })
+const editSpaceNameRules = ref({
+  spaceName: [
+    { required: true, message: 'Please enter space name', trigger: 'blur' },
+    { min: 1, max: 50, message: 'Space name length should be 1-50 characters', trigger: 'blur' }
+  ]
+})
+const editSpaceNameLoading = ref(false)
+const editSpaceNameFormRef = ref()
+
+const showEditSpaceNameModal = () => {
+  editSpaceNameForm.value.spaceName = space.value.spaceName || ''
+  editSpaceNameModalVisible.value = true
+}
+
+const handleEditSpaceNameOk = async () => {
+  try {
+    await editSpaceNameFormRef.value.validate()
+    editSpaceNameLoading.value = true
+
+    const res = await editSpaceUsingPost({
+      id: props.id,
+      spaceName: editSpaceNameForm.value.spaceName
+    })
+
+    if (res.data.code === 0) {
+      // 更新本地空间信息
+      space.value.spaceName = editSpaceNameForm.value.spaceName
+      message.success('Space name updated successfully')
+      editSpaceNameModalVisible.value = false
+    } else {
+      message.error('Failed to update space name: ' + res.data.message)
+    }
+  } catch (error) {
+    message.error('Failed to update space name')
+  } finally {
+    editSpaceNameLoading.value = false
   }
 }
 </script>

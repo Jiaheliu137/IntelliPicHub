@@ -108,7 +108,9 @@ import ImageCropper from '@/components/ImageCropper.vue'
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import ImageOutPainting from '@/components/ImageOutPainting.vue'
 import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 
+const loginUserStore = useLoginUserStore()
 
 // 定义 picture 属性，存储上传的图片信息
 const picture = ref<API.PictureVO>()
@@ -196,6 +198,12 @@ const handleSubmit = async (values: API.PictureEditRequest) => {
   // 操作成功
   if (res.data.code === 0 && res.data.data) {
     message.success('Operation success')
+
+    // 如果是上传到公共图库（没有spaceId）且用户不是管理员，提示等待审核
+    if (!spaceId.value && loginUserStore.loginUser.userRole !== 'admin') {
+      message.info('Please wait for administrator approval', 3)
+    }
+
     // 跳转到图片详情页
     router.push({
       path: `/picture/${pictureId}`

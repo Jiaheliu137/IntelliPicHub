@@ -154,9 +154,74 @@ watchEffect(() => {
 const router = useRouter()
 // 当前要高亮的菜单项
 const current = ref<string[]>()
+
+// 更新高亮菜单项的函数
+const updateSelectedKeys = (currentPath: string) => {
+  console.log('当前路径:', currentPath)
+  console.log('团队空间列表:', teamSpaceList.value)
+  console.log('拥有的团队空间:', myOwnedTeamSpace.value)
+
+  // 首页
+  if (currentPath === '/') {
+    current.value = ['/']
+    console.log('设置高亮: 首页')
+    return
+  }
+
+  // 个人空间 - 直接匹配路径或检查空间ID
+  if (currentPath === '/my_space') {
+    current.value = ['/my_space']
+    console.log('设置高亮: 个人空间页面')
+    return
+  }
+
+  // 团队空间页面 - 匹配 /space/xxx 格式
+  if (currentPath.startsWith('/space/')) {
+    const spaceId = currentPath.split('/space/')[1]
+    console.log('检测到空间页面, spaceId:', spaceId)
+
+    // 检查是否是我拥有的团队空间
+    if (myOwnedTeamSpace.value && spaceId === String(myOwnedTeamSpace.value.spaceId)) {
+      current.value = [`/space/${myOwnedTeamSpace.value.spaceId}`]
+      console.log('设置高亮: 我的团队空间')
+      return
+    }
+
+    // 检查是否是参与的其他团队空间
+    const matchedSpace = teamSpaceList.value.find(spaceUser => String(spaceUser.spaceId) === spaceId)
+    if (matchedSpace) {
+      current.value = [`/space/${matchedSpace.spaceId}`]
+      console.log('设置高亮: 参与的团队空间')
+      return
+    }
+
+    // 如果不是团队空间，可能是个人空间，高亮 "My space"
+    current.value = ['/my_space']
+    console.log('设置高亮: 个人空间（通过空间ID）')
+    return
+  }
+
+  // 其他情况清空高亮
+  current.value = []
+  console.log('清空高亮')
+}
+
 // 监听路由变化，更新高亮菜单项
-router.afterEach((to) => {
-  current.value = [to.path]
+router.afterEach((to, from) => {
+  updateSelectedKeys(to.path)
+
+  // 如果从创建空间页面跳转到空间页面，重新获取团队空间列表
+  if (from.path?.includes('/add_space') && to.path?.includes('/space/')) {
+    fetchTeamSpaceList()
+  }
+})
+
+// 监听团队空间列表变化，更新高亮
+watchEffect(() => {
+  // 登录且数据加载完成后才更新高亮
+  if (loginUserStore.loginUser.id) {
+    updateSelectedKeys(router.currentRoute.value.path)
+  }
 })
 
 // 路由跳转事件
