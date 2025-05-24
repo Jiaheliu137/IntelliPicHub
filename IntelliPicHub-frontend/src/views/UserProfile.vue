@@ -93,16 +93,35 @@
       @ok="handlePasswordOk"
       :confirmLoading="confirmLoading"
       @cancel="passwordModalVisible = false"
+      width="550px"
     >
-      <a-form :model="passwordForm" :rules="passwordRules" ref="passwordFormRef">
-        <a-form-item name="oldPassword" label="Current Password">
-          <a-input-password v-model:value="passwordForm.oldPassword" placeholder="Enter current password" />
+      <a-form
+        :model="passwordForm"
+        :rules="passwordRules"
+        ref="passwordFormRef"
+        :label-col="{ span: 8 }"
+        :wrapper-col="{ span: 16 }"
+      >
+        <a-form-item name="oldPassword" label="Current Password" has-feedback>
+          <a-input-password
+            v-model:value="passwordForm.oldPassword"
+            placeholder="Enter current password"
+            autocomplete="current-password"
+          />
         </a-form-item>
-        <a-form-item name="newPassword" label="New Password">
-          <a-input-password v-model:value="passwordForm.newPassword" placeholder="Enter new password" />
+        <a-form-item name="newPassword" label="New Password" has-feedback>
+          <a-input-password
+            v-model:value="passwordForm.newPassword"
+            placeholder="Enter new password"
+            autocomplete="new-password"
+          />
         </a-form-item>
-        <a-form-item name="checkPassword" label="Confirm New Password">
-          <a-input-password v-model:value="passwordForm.checkPassword" placeholder="Confirm new password" />
+        <a-form-item name="checkPassword" label="Confirm New Password" has-feedback>
+          <a-input-password
+            v-model:value="passwordForm.checkPassword"
+            placeholder="Confirm new password"
+            autocomplete="new-password"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -114,16 +133,32 @@
       @ok="handleInfoOk"
       :confirmLoading="confirmLoading"
       @cancel="infoModalVisible = false"
+      width="600px"
     >
-      <a-form :model="infoForm" :rules="infoRules" ref="infoFormRef">
+      <a-form
+        :model="infoForm"
+        :rules="infoRules"
+        ref="infoFormRef"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 18 }"
+      >
         <a-form-item label="User ID">
           <a-input :value="loginUserStore.loginUser.id" disabled />
         </a-form-item>
-        <a-form-item name="userName" label="Username">
+        <a-form-item label="User Account">
+          <a-input :value="loginUserStore.loginUser.userAccount || loginUserStore.loginUser.id" disabled />
+        </a-form-item>
+        <a-form-item name="userName" label="Username" has-feedback>
           <a-input v-model:value="infoForm.userName" placeholder="Enter username" />
         </a-form-item>
         <a-form-item name="userProfile" label="Profile Description">
-          <a-textarea v-model:value="infoForm.userProfile" placeholder="Enter profile description" :rows="4" />
+          <a-textarea
+            v-model:value="infoForm.userProfile"
+            placeholder="Enter profile description"
+            :rows="4"
+            show-count
+            :maxlength="200"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
