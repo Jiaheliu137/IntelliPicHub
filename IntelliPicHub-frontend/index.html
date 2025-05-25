@@ -5,6 +5,69 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliPicHub</title>
+    
+    <!-- 禁用开发者工具的内联脚本 -->
+    <script>
+      // 立即执行的保护脚本
+      (function() {
+        // 禁用右键菜单
+        document.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          return false;
+        });
+        
+        // 禁用F12和开发者工具快捷键
+        document.addEventListener('keydown', function(e) {
+          // F12
+          if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+Shift+I
+          if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+Shift+J
+          if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+            e.preventDefault();
+            return false;
+          }
+          // Ctrl+U
+          if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            return false;
+          }
+        });
+        
+        // 禁用选择文本
+        document.addEventListener('selectstart', function(e) {
+          e.preventDefault();
+          return false;
+        });
+        
+        // 检测开发者工具
+        var devtools = false;
+        var threshold = 160;
+        
+        function detectDevTools() {
+          if (window.outerHeight - window.innerHeight > threshold || 
+              window.outerWidth - window.innerWidth > threshold) {
+            if (!devtools) {
+              devtools = true;
+              alert('Developer tools detected, please close them and continue using!');
+              // 可选：刷新页面
+              // window.location.reload();
+            }
+          } else {
+            devtools = false;
+          }
+        }
+        
+        // 每500ms检测一次
+        setInterval(detectDevTools, 500);
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>
