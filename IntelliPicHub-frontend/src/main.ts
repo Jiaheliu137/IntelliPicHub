@@ -12,6 +12,9 @@ import VueCropper from 'vue-cropper';
 import 'vue-cropper/dist/index.css'
 import '@/access/index.ts';
 
+// 引入禁用开发者工具功能
+import { initDisableDevTools } from '@/utils/disableDevTools';
+
 
 
 
@@ -22,6 +25,8 @@ app.use(router)
 app.use(Antd)
 app.use(VueCropper)
 
+// 初始化禁用开发者工具功能
+initDisableDevTools()
 
 app.mount('#app')
 
