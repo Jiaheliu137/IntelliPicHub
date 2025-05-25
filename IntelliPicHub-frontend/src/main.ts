@@ -12,9 +12,8 @@ import VueCropper from 'vue-cropper';
 import 'vue-cropper/dist/index.css'
 import '@/access/index.ts';
 
-// 导入开发者工具保护
-import { initDevToolsProtection } from '@/utils/disableDevTools';
-import { initAdvancedProtection } from '@/utils/advancedProtection';
+// 引入禁用开发者工具功能
+import { initDisableDevTools } from '@/utils/disableDevTools';
 
 
 
@@ -26,11 +25,8 @@ app.use(router)
 app.use(Antd)
 app.use(VueCropper)
 
-// 初始化开发者工具保护（仅在生产环境生效）
-initDevToolsProtection()
-
-// 初始化高级保护（更强的保护措施）
-initAdvancedProtection()
+// 初始化禁用开发者工具功能
+initDisableDevTools()
 
 app.mount('#app')
 

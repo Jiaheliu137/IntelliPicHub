@@ -1,58 +1,100 @@
 /**
- * 禁用开发者工具的工具函数
- * 包含多种方法来阻止用户打开开发者工具
+ * 禁用开发者工具相关功能
+ * 包括F12、右键菜单、常用开发者工具快捷键等
  */
 
-// 禁用右键菜单
-function disableContextMenu() {
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault()
-    return false
-  })
-}
+// 禁用的快捷键说明
+// F12 - 开发者工具
+// Ctrl+Shift+I - 开发者工具
+// Ctrl+Shift+J - 控制台
+// Ctrl+Shift+C - 元素选择器
+// Ctrl+U - 查看源码
+// Ctrl+S - 保存页面
 
-// 禁用F12和其他开发者工具快捷键
+/**
+ * 禁用键盘快捷键
+ */
 function disableKeyboardShortcuts() {
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', (event) => {
     // 禁用F12
-    if (e.key === 'F12') {
-      e.preventDefault()
+    if (event.key === 'F12') {
+      event.preventDefault()
+      event.stopPropagation()
+      showWarning()
       return false
     }
 
     // 禁用Ctrl+Shift+I (开发者工具)
-    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-      e.preventDefault()
+    if (event.ctrlKey && event.shiftKey && event.key === 'I') {
+      event.preventDefault()
+      event.stopPropagation()
+      showWarning()
       return false
     }
 
     // 禁用Ctrl+Shift+J (控制台)
-    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-      e.preventDefault()
+    if (event.ctrlKey && event.shiftKey && event.key === 'J') {
+      event.preventDefault()
+      event.stopPropagation()
+      showWarning()
       return false
     }
 
-    // 禁用Ctrl+U (查看源代码)
-    if (e.ctrlKey && e.key === 'u') {
-      e.preventDefault()
+    // 禁用Ctrl+Shift+C (元素选择器)
+    if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+      event.preventDefault()
+      event.stopPropagation()
+      showWarning()
       return false
     }
 
-    // 禁用Ctrl+Shift+C (选择元素)
-    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-      e.preventDefault()
+    // 禁用Ctrl+U (查看源码)
+    if (event.ctrlKey && event.key === 'U') {
+      event.preventDefault()
+      event.stopPropagation()
+      showWarning()
       return false
     }
 
     // 禁用Ctrl+S (保存页面)
-    if (e.ctrlKey && e.key === 's') {
-      e.preventDefault()
+    if (event.ctrlKey && event.key === 's') {
+      event.preventDefault()
+      event.stopPropagation()
       return false
     }
   })
 }
 
-// 检测开发者工具是否打开
+/**
+ * 禁用右键菜单
+ */
+function disableContextMenu() {
+  document.addEventListener('contextmenu', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    showWarning()
+    return false
+  })
+}
+
+/**
+ * 禁用文本选择
+ */
+function disableTextSelection() {
+  document.addEventListener('selectstart', (event) => {
+    event.preventDefault()
+    return false
+  })
+
+  document.addEventListener('dragstart', (event) => {
+    event.preventDefault()
+    return false
+  })
+}
+
+/**
+ * 检测开发者工具是否打开
+ */
 function detectDevTools() {
   let devtools = false
   const threshold = 160
@@ -70,82 +112,77 @@ function detectDevTools() {
   }, 500)
 }
 
-// 当检测到开发者工具打开时的处理
+/**
+ * 处理开发者工具被打开的情况
+ */
 function handleDevToolsOpen() {
-  // 可以选择以下任一种处理方式：
+  // 可以选择重定向到其他页面或显示警告
+  showWarning()
 
-  // 方式1: 关闭当前页面
+  // 可选：关闭当前页面
   // window.close()
 
-  // 方式2: 跳转到其他页面
-  // window.location.href = 'about:blank'
-
-  // 方式3: 显示警告信息
-  alert('检测到开发者工具，请关闭后继续使用！')
-
-  // 方式4: 刷新页面
-  // window.location.reload()
+  // 可选：重定向到首页
+  // window.location.href = '/'
 }
 
-// 禁用选择文本
-function disableTextSelection() {
-  document.addEventListener('selectstart', (e) => {
-    e.preventDefault()
-    return false
-  })
-
-  document.addEventListener('dragstart', (e) => {
-    e.preventDefault()
-    return false
-  })
+/**
+ * 显示警告信息
+ */
+function showWarning() {
+  console.clear()
+  console.log('%c⚠️ 警告', 'color: red; font-size: 20px; font-weight: bold;')
+  console.log('%c Developer tools detected, please close them and continue using!', 'color: red; font-size: 14px;')
 }
 
-// 禁用打印
-function disablePrint() {
-  window.addEventListener('beforeprint', (e) => {
-    e.preventDefault()
-    return false
-  })
-
-  window.addEventListener('afterprint', (e) => {
-    e.preventDefault()
-    return false
-  })
+/**
+ * 清空控制台
+ */
+function clearConsole() {
+  setInterval(() => {
+    console.clear()
+  }, 1000)
 }
 
-// 覆盖console对象（仅在生产环境）
-function disableConsole() {
-  if (import.meta.env.PROD) {
-    const noop = () => {}
-    const methods = ['log', 'debug', 'info', 'warn', 'error', 'assert', 'dir', 'dirxml', 'group', 'groupEnd', 'time', 'timeEnd', 'count', 'trace', 'profile', 'profileEnd']
-
-    methods.forEach(method => {
-      (console as any)[method] = noop
-    })
-  }
-}
-
-// 主函数：启用所有保护措施
-export function initDevToolsProtection() {
+/**
+ * 初始化所有禁用功能
+ */
+export function initDisableDevTools() {
   // 只在生产环境启用
-  if (import.meta.env.PROD) {
-    disableContextMenu()
+  if (import.meta.env.MODE === 'production') {
     disableKeyboardShortcuts()
-    detectDevTools()
+    disableContextMenu()
     disableTextSelection()
-    disablePrint()
-    disableConsole()
+    detectDevTools()
+    clearConsole()
 
-    console.log('开发者工具保护已启用')
+    console.log('%c🔒 TypeScript layer developer tool protection enabled', 'color: blue; font-size: 12px;')
   } else {
-    console.log('开发环境，跳过开发者工具保护')
+    console.log('%c🔧 Development environment: TypeScript layer developer tool protection disabled', 'color: orange; font-size: 12px;')
   }
 }
 
-// 轻量级版本：只禁用基本功能
+/**
+ * 仅禁用基础功能（不包括开发者工具检测）
+ * 适用于需要保留部分开发功能的场景
+ */
 export function initBasicProtection() {
   disableContextMenu()
-  disableKeyboardShortcuts()
+  disableTextSelection()
 
-  console.log('基本保护已启用')
+  // 只禁用部分快捷键
+  document.addEventListener('keydown', (event) => {
+    // 禁用Ctrl+U (查看源码)
+    if (event.ctrlKey && event.key === 'U') {
+      event.preventDefault()
+      showWarning()
+      return false
+    }
+
+    // 禁用Ctrl+S (保存页面)
+    if (event.ctrlKey && event.key === 's') {
+      event.preventDefault()
+      return false
+    }
+  })
 }

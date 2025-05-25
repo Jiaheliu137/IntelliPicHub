@@ -6,67 +6,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliPicHub</title>
     
-    <!-- 禁用开发者工具的内联脚本 -->
+    <!-- 禁用开发者工具脚本 - 仅在生产环境启用 -->
     <script>
-      // 立即执行的保护脚本
-      (function() {
+      // 检查是否为生产环境（通过检查是否有开发服务器特征）
+      const isProduction = !window.location.hostname.includes('localhost') && 
+                          !window.location.hostname.includes('127.0.0.1') &&
+                          !window.location.hostname.includes('dev');
+      
+      if (isProduction) {
         // 禁用右键菜单
         document.addEventListener('contextmenu', function(e) {
           e.preventDefault();
+          console.log('%c🚫 Right-click menu disabled', 'color: orange; font-size: 12px;');
           return false;
         });
         
-        // 禁用F12和开发者工具快捷键
+        // 禁用F12和其他开发者工具快捷键
         document.addEventListener('keydown', function(e) {
-          // F12
+          let blocked = false;
+          
+          // 禁用F12
           if (e.key === 'F12') {
-            e.preventDefault();
-            return false;
+            blocked = true;
           }
-          // Ctrl+Shift+I
+          
+          // 禁用Ctrl+Shift+I (开发者工具)
           if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-            e.preventDefault();
-            return false;
+            blocked = true;
           }
-          // Ctrl+Shift+J
+          
+          // 禁用Ctrl+Shift+J (控制台)
           if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-            e.preventDefault();
-            return false;
+            blocked = true;
           }
-          // Ctrl+U
+          
+          // 禁用Ctrl+Shift+C (元素选择器)
+          if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            blocked = true;
+          }
+          
+          // 禁用Ctrl+U (查看源码)
           if (e.ctrlKey && e.key === 'u') {
+            blocked = true;
+          }
+          
+          if (blocked) {
             e.preventDefault();
+            e.stopPropagation();
+            console.clear();
+            console.log('%c🔒 Developer tool access has been restricted', 'color: red; font-size: 14px; font-weight: bold;');
+            console.log('%cTo protect the website security, some features have been disabled', 'color: red; font-size: 12px;');
             return false;
           }
         });
         
-        // 禁用选择文本
-        document.addEventListener('selectstart', function(e) {
-          e.preventDefault();
-          return false;
-        });
-        
-        // 检测开发者工具
-        var devtools = false;
-        var threshold = 160;
+        // 检测开发者工具是否打开
+        let devtools = false;
+        const threshold = 160;
         
         function detectDevTools() {
-          if (window.outerHeight - window.innerHeight > threshold || 
-              window.outerWidth - window.innerWidth > threshold) {
+          const heightDiff = window.outerHeight - window.innerHeight;
+          const widthDiff = window.outerWidth - window.innerWidth;
+          
+          if (heightDiff > threshold || widthDiff > threshold) {
             if (!devtools) {
               devtools = true;
-              alert('Developer tools detected, please close them and continue using!');
-              // 可选：刷新页面
-              // window.location.reload();
+              console.clear();
+              console.log('%c⚠️ Developer tool detected', 'color: red; font-size: 16px; font-weight: bold;');
+              console.log('%cTo protect the website security, please close the developer tools', 'color: red; font-size: 12px;');
+              
+              // 可选：显示用户友好的提示
+              // alert('检测到开发者工具，为了保护网站安全，请关闭开发者工具');
             }
           } else {
             devtools = false;
           }
         }
         
-        // 每500ms检测一次
-        setInterval(detectDevTools, 500);
-      })();
+        // 定期检测开发者工具
+        setInterval(detectDevTools, 1000);
+        
+        // 定期清空控制台
+        setInterval(function() {
+          console.clear();
+          console.log('%c🛡️ IntelliPicHub - 安全保护已启用', 'color: blue; font-size: 12px;');
+        }, 3000);
+        
+        console.log('%c🔒 Production environment security protection enabled', 'color: green; font-size: 12px; font-weight: bold;');
+      } else {
+        console.log('%c🔧 Development environment: security protection disabled', 'color: orange; font-size: 12px;');
+      }
     </script>
   </head>
   <body>
