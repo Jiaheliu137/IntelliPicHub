@@ -74,7 +74,7 @@ function disableDevTools() {
         devtools.open = true;
         // 检测到开发者工具打开时的处理
         console.clear();
-        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:24px;color:#ff4d4f;">请关闭开发者工具后刷新页面</div>';
+        document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-size:24px;color:#ff4d4f;">Please close the developer tools and refresh the page</div>';
       }
     } else {
       devtools.open = false;
