@@ -2,7 +2,7 @@
   <div class="user-profile-container">
     <a-card title="User Profile" :bordered="false">
       <a-row :gutter="[24, 24]">
-        <a-col :span="8">
+        <a-col :xs="24" :sm="12" :md="8">
           <a-card class="profile-card" @click="showAvatarModal">
             <template #cover>
               <div class="avatar-container">
@@ -21,7 +21,7 @@
           </a-card>
         </a-col>
 
-        <a-col :span="8">
+        <a-col :xs="24" :sm="12" :md="8">
           <a-card class="profile-card" @click="showPasswordModal">
             <template #cover>
               <div class="icon-container">
@@ -32,7 +32,7 @@
           </a-card>
         </a-col>
 
-        <a-col :span="8">
+        <a-col :xs="24" :sm="12" :md="8">
           <a-card class="profile-card" @click="showInfoModal">
             <template #cover>
               <div class="icon-container">

@@ -1,113 +1,112 @@
 <template>
   <div id="pictureDetailPage">
-    <!-- 背景模糊容器 -->
-    <div
+    <!-- 使用 Ant Design 的 Card 组件作为背景模糊容器 -->
+    <a-card
+      :bordered="false"
       class="picture-detail-wrapper"
       :style="{
         backgroundImage: picture.url ? `url(${picture.url})` : 'none'
       }"
     >
-      <div class="content-overlay">
-    <!--    列的横向和竖向间距都是16-->
-    <a-row :gutter="[16, 16]">
-      <!-- 图片展示区 -->
-      <a-col :sm="24" :md="16" :xl="18">
-            <a-card :bordered="false">
-          <a-image
-            style="max-height: 600px; object-fit: contain"
-            :src="picture.url"
-          />
-        </a-card>
-      </a-col>
-      <!-- 图片信息区 -->
-      <a-col :sm="24" :md="8" :xl="6">
-            <a-card :bordered="false">
-          <a-descriptions :column="1">
-                <a-descriptions-item>
-              <a-space>
-                <a-avatar :size="24" :src="picture.user?.userAvatar" />
-                <div>{{ picture.user?.userName }}</div>
-              </a-space>
-            </a-descriptions-item>
-            <a-descriptions-item label="Name">
-              {{ picture.name ?? 'unnamed' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Introduction">
-              {{ picture.introduction ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Category">
-              {{ picture.category ?? 'Default' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Tags">
-              <a-tag v-for="tag in picture.tags" :key="tag">
-                {{ tag }}
-              </a-tag>
-            </a-descriptions-item>
-            <a-descriptions-item label="Format">
-              {{ picture.picFormat ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Width">
-              {{ picture.picWidth ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Height">
-              {{ picture.picHeight ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Ratio">
-              {{ picture.picScale ?? '-' }}
-            </a-descriptions-item>
-            <a-descriptions-item label="Size">
-              {{ formatSize(picture.picSize) }}
-            </a-descriptions-item>
-                <!-- <a-descriptions-item label="Color tone">
-              <a-space>
-                {{ picture.picColor ?? '-' }}
-                <div :style="{
-                  width: '24px',
-                  height: '18px',
-                  backgroundColor: picture.picColor ? toHexColor(picture.picColor) : 'transparent'
-                }"
-                >
-              </div>
-              </a-space>
-                </a-descriptions-item> -->
-          </a-descriptions>
-          <!--          图片操作-->
-          <a-space wrap>
-            <a-button :icon="h(ShareAltOutlined)"  type="primary" ghost @click="doShare">
-              Share
-            </a-button>
-            <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
-              Edit
-            </a-button>
-            <a-button :icon="h(DeleteOutlined)" v-if="canDelete" danger @click="doDelete">
-              Delete
-            </a-button>
-            <a-button
-              v-if="isAdmin"
-              type="primary"
-              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
-            >
-              Pass
-            </a-button>
-            <a-button
-              v-if="isAdmin"
-              danger
-              @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
-            >
-              Reject
-            </a-button>
-            <a-button type="primary" @click="doDownload">
-              Download Original
-              <template #icon>
-                <DownloadOutlined />
-              </template>
-            </a-button>
-          </a-space>
-        </a-card>
-      </a-col>
-    </a-row>
-      </div>
-    </div>
+      <!--    列的横向和竖向间距都是16-->
+      <a-row :gutter="[16, 16]">
+        <!-- 图片展示区 -->
+        <a-col :sm="24" :md="16" :xl="18">
+          <a-card :bordered="false">
+            <a-image
+              style="max-height: 600px; object-fit: contain"
+              :src="picture.url"
+            />
+          </a-card>
+        </a-col>
+        <!-- 图片信息区 -->
+        <a-col :sm="24" :md="8" :xl="6">
+          <a-card :bordered="false">
+            <a-descriptions :column="1">
+              <a-descriptions-item>
+                <a-space>
+                  <a-avatar :size="24" :src="picture.user?.userAvatar" />
+                  <div>{{ picture.user?.userName }}</div>
+                </a-space>
+              </a-descriptions-item>
+              <a-descriptions-item label="Name">
+                {{ picture.name ?? 'unnamed' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Introduction">
+                {{ picture.introduction ?? '-' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Category">
+                {{ picture.category ?? 'Default' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Tags">
+                <a-tag v-for="tag in picture.tags" :key="tag">
+                  {{ tag }}
+                </a-tag>
+              </a-descriptions-item>
+              <a-descriptions-item label="Format">
+                {{ picture.picFormat ?? '-' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Width">
+                {{ picture.picWidth ?? '-' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Height">
+                {{ picture.picHeight ?? '-' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Ratio">
+                {{ picture.picScale ?? '-' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="Size">
+                {{ formatSize(picture.picSize) }}
+              </a-descriptions-item>
+              <!-- <a-descriptions-item label="Color tone">
+                <a-space>
+                  {{ picture.picColor ?? '-' }}
+                  <div :style="{
+                    width: '24px',
+                    height: '18px',
+                    backgroundColor: picture.picColor ? toHexColor(picture.picColor) : 'transparent'
+                  }"
+                  >
+                </div>
+                </a-space>
+              </a-descriptions-item> -->
+            </a-descriptions>
+            <!--          图片操作-->
+            <a-space wrap>
+              <a-button :icon="h(ShareAltOutlined)"  type="primary" ghost @click="doShare">
+                Share
+              </a-button>
+              <a-button :icon="h(EditOutlined)" v-if="canEdit" type="default" @click="doEdit">
+                Edit
+              </a-button>
+              <a-button :icon="h(DeleteOutlined)" v-if="canDelete" danger @click="doDelete">
+                Delete
+              </a-button>
+              <a-button
+                v-if="isAdmin"
+                type="primary"
+                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.PASS)"
+              >
+                Pass
+              </a-button>
+              <a-button
+                v-if="isAdmin"
+                danger
+                @click="handleReview(picture, PIC_REVIEW_STATUS_ENUM.REJECT)"
+              >
+                Reject
+              </a-button>
+              <a-button type="primary" @click="doDownload">
+                Download Original
+                <template #icon>
+                  <DownloadOutlined />
+                </template>
+              </a-button>
+            </a-space>
+          </a-card>
+        </a-col>
+      </a-row>
+    </a-card>
     <ShareModal ref="shareModalRef" :link="shareLink" />
   </div>
 </template>
@@ -268,7 +267,7 @@ const doShare = (e) => {
   margin-bottom: 16px;
 }
 
-/* 背景模糊容器 */
+/* 背景模糊容器 - 使用 Ant Design Card 组件 */
 .picture-detail-wrapper {
   position: relative;
   min-height: 100vh;
@@ -310,35 +309,23 @@ const doShare = (e) => {
   z-index: 0;
 }
 
-/* 内容覆盖层 */
-.content-overlay {
+/* 主容器卡片样式 */
+:deep(.picture-detail-wrapper.ant-card) {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+:deep(.picture-detail-wrapper .ant-card-body) {
   position: relative;
   z-index: 1;
   background: transparent;
   padding: 32px;
   min-height: 100vh;
-  border-radius: 24px;
-  display: flex;
-  align-items: center;
 }
 
-/* 等高行列容器 */
-:deep(.ant-row) {
-  background: transparent;
-  margin: 0 !important;
-  height: 90vh;
-  min-height: 600px;
-  width: 100%;
-}
-
-:deep(.ant-col) {
-  background: transparent;
-  padding: 8px !important;
-  height: 100%;
-}
-
-/* 卡片样式优化 - 强烈毛玻璃效果 */
-:deep(.ant-card) {
+/* 内部卡片样式优化 - 强烈毛玻璃效果 */
+:deep(.ant-card:not(.picture-detail-wrapper)) {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(30px) saturate(1.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -348,20 +335,16 @@ const doShare = (e) => {
     0 2px 16px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   overflow: hidden;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 16px;
 }
 
-:deep(.ant-card-body) {
+/* 内部卡片内容样式 */
+:deep(.ant-card:not(.picture-detail-wrapper) .ant-card-body) {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   border-radius: 0;
   padding: 24px;
   margin: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 /* 图片预览卡片特殊处理 - 居中显示图片 */
@@ -377,12 +360,11 @@ const doShare = (e) => {
 :deep(.ant-image) {
   display: block;
   text-align: center;
-  max-height: 95%;
   width: 100%;
 }
 
 :deep(.ant-image img) {
-  max-height: 85vh;
+  max-height: 600px;
   object-fit: contain;
   width: auto;
   max-width: 100%;
@@ -390,6 +372,8 @@ const doShare = (e) => {
 
 /* 信息卡片内容布局 */
 :deep(.ant-col:last-child .ant-card-body) {
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
