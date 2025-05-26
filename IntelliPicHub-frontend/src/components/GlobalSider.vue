@@ -80,7 +80,7 @@ const menuItems = computed(() => {
   {
     key: '/',
     icon: () => h(PictureOutlined),
-    label: 'Public picture'
+    label: 'Public'
   },
   {
     key: '/my_space',
