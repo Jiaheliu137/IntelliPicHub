@@ -6,95 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliPicHub</title>
     
-    <!-- 禁用开发者工具脚本 - 仅在生产环境启用 -->
     <script>
-      // 检查是否为生产环境（通过检查是否有开发服务器特征）
-      const isProduction = !window.location.hostname.includes('localhost') && 
-                          !window.location.hostname.includes('127.0.0.1') &&
-                          !window.location.hostname.includes('dev');
-      
-      if (isProduction) {
-        // 禁用右键菜单
-        document.addEventListener('contextmenu', function(e) {
-          e.preventDefault();
-          console.log('%c🚫 Right-click menu disabled', 'color: orange; font-size: 12px;');
-          return false;
-        });
-        
-        // 禁用F12和其他开发者工具快捷键
-        document.addEventListener('keydown', function(e) {
-          let blocked = false;
-          
-          // 禁用F12
-          if (e.key === 'F12') {
-            blocked = true;
-          }
-          
-          // 禁用Ctrl+Shift+I (开发者工具)
-          if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-            blocked = true;
-          }
-          
-          // 禁用Ctrl+Shift+J (控制台)
-          if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-            blocked = true;
-          }
-          
-          // 禁用Ctrl+Shift+C (元素选择器)
-          if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-            blocked = true;
-          }
-          
-          // 禁用Ctrl+U (查看源码)
-          if (e.ctrlKey && e.key === 'u') {
-            blocked = true;
-          }
-          
-          if (blocked) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.clear();
-            console.log('%c🔒 Developer tool access has been restricted', 'color: red; font-size: 14px; font-weight: bold;');
-            console.log('%cTo protect the website security, some features have been disabled', 'color: red; font-size: 12px;');
-            return false;
-          }
-        });
-        
-        // 检测开发者工具是否打开
-        let devtools = false;
-        const threshold = 160;
-        
-        function detectDevTools() {
-          const heightDiff = window.outerHeight - window.innerHeight;
-          const widthDiff = window.outerWidth - window.innerWidth;
-          
-          if (heightDiff > threshold || widthDiff > threshold) {
-            if (!devtools) {
-              devtools = true;
-              console.clear();
-              console.log('%c⚠️ Developer tool detected', 'color: red; font-size: 16px; font-weight: bold;');
-              console.log('%cTo protect the website security, please close the developer tools', 'color: red; font-size: 12px;');
-              
-              // 可选：显示用户友好的提示
-              // alert('检测到开发者工具，为了保护网站安全，请关闭开发者工具');
-            }
-          } else {
-            devtools = false;
-          }
-        }
-        
-        // 定期检测开发者工具
-        setInterval(detectDevTools, 1000);
-        
-        // 定期清空控制台
+      if (!location.hostname.includes('localhost') && !location.hostname.includes('127.0.0.1') && !location.hostname.includes('dev')) {
         setInterval(function() {
-          console.clear();
-          console.log('%c🛡️ IntelliPicHub - 安全保护已启用', 'color: blue; font-size: 12px;');
-        }, 3000);
+          if (outerHeight - innerHeight > 160 || outerWidth - innerWidth > 160) {
+            location.href = 'about:blank';
+          }
+        }, 100);
         
-        console.log('%c🔒 Production environment security protection enabled', 'color: green; font-size: 12px; font-weight: bold;');
-      } else {
-        console.log('%c🔧 Development environment: security protection disabled', 'color: orange; font-size: 12px;');
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && 'IJC'.includes(e.key)) || (e.ctrlKey && e.key === 'u')) {
+            e.preventDefault();
+          }
+        });
       }
     </script>
   </head>
