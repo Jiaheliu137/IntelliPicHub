@@ -5,23 +5,6 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliPicHub</title>
-    
-    <script>
-      if (!location.hostname.includes('localhost') && !location.hostname.includes('127.0.0.1') && !location.hostname.includes('dev')) {
-        setInterval(function() {
-          if (outerHeight - innerHeight > 160 || outerWidth - innerWidth > 160) {
-            location.href = 'about:blank';
-          }
-        }, 100);
-        
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && 'IJC'.includes(e.key)) || (e.ctrlKey && e.key === 'u')) {
-            e.preventDefault();
-          }
-        });
-      }
-    </script>
   </head>
   <body>
     <div id="app"></div>

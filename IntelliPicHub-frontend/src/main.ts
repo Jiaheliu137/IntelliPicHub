@@ -12,12 +12,16 @@ import VueCropper from 'vue-cropper';
 import 'vue-cropper/dist/index.css'
 import '@/access/index.ts';
 
+
+
+
 const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
 app.use(Antd)
 app.use(VueCropper)
+
 
 app.mount('#app')
 
